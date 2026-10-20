@@ -1,5 +1,7 @@
 # dsh-scnet-plan
 
+[![CI](https://github.com/Ronnie-Young/dsh-scnet-plan/actions/workflows/ci.yml/badge.svg)](https://github.com/Ronnie-Young/dsh-scnet-plan/actions/workflows/ci.yml)
+
 **在 DeepSeek Harness 里直接看 SCNet Token Plan 还剩多少，不用再开控制台。**
 
 SCNet（超算互联网）的 Token Plan 按月发 Credits，但余额只有登录控制台才看得到。装上这个插件后：

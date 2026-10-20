@@ -128,3 +128,12 @@ DSH 的插件市场读取一个 **format 1 JSON**（本仓库 `market/index.json
 3. 提交索引文件（可直接在 GitHub 网页编辑，或本地提交后推送）。
 
 `engines.dsh` 是兼容的 DSH 版本范围（当前用 `>=0.2.1-rc.2`），与本机运行版本保持一致即可。
+
+## 9. 推送超时的备用方案
+
+如果 `git push` 在 22 端口或 HTTPS 上超时，改用 GitHub 的 SSH 443 入口：
+
+```bash
+git remote set-url origin ssh://git@ssh.github.com:443/<owner>/dsh-scnet-plan.git
+git push origin main
+```
