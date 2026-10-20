@@ -12,21 +12,20 @@ SCNet（超算互联网）的 Token Plan 按月发 Credits，但余额只有登�
 | --- | --- |
 | ![面板浅色](docs/panel-after.png) | ![面板深色](docs/panel-after-dark.png) |
 
-## 30 秒安装
+## 安装
 
-需要先装好 DeepSeek Harness（桌面版或 CLI）。
+需要先装好 DeepSeek Harness（桌面版或 CLI）。在 DSH 对话里让 agent 调 `plugin_manager install_bundle`，`target` 按下面的方式填：
 
-```bash
-git clone https://github.com/Ronnie-Young/dsh-scnet-plan.git
-```
+| 方式 | target | 说明 |
+| --- | --- | --- |
+| **GitHub 源**（免 clone，推荐） | `github:Ronnie-Young/dsh-scnet-plan#v0.0.1` | pnpm 直接拉取，不用本地目录 |
+| **Release 压缩包** | `https://github.com/Ronnie-Young/dsh-scnet-plan/releases/download/v0.0.1/dsh-scnet-plan-0.0.1.tgz` | 从 GitHub Release 直链安装 |
+| 本地目录（开发/排错） | `/你的路径/dsh-scnet-plan` | 需要先 `git clone` |
+| npm（首次发布后启用） | `dsh-scnet-plan` | 发布后一行安装 |
 
-然后在 DSH 对话里对 agent 说：
+> 安装会申请 danger-full-access 权限，按提示批准。装完**刷新页面**，侧栏出现「SCNet 套餐」图标就成功了。
 
-> 用 plugin_manager 安装 `/你的路径/dsh-scnet-plan`
-
-（也就是 `plugin_manager install_bundle`，target 填插件目录的绝对路径；会申请 danger-full-access 权限。）
-
-装完**刷新页面**，侧栏出现「SCNet 套餐」图标就成功了。
+如果还想更省事，也可以让 agent 直接读这个仓库的 README，把上面的 target 告诉它。
 
 ## 第一次使用：登录一次
 

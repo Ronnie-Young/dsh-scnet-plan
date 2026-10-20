@@ -70,28 +70,37 @@ plugin_manager install_bundle  target = /绝对路径/dsh-scnet-plan
 
 ## 5. 安装方式对照
 
-| 方式 | 命令 / target | 适用 |
+| 方式 | target | 适用 |
 | --- | --- | --- |
-| 本地 clone（推荐） | `/绝对路径/dsh-scnet-plan` | 所有人，最稳 |
-| GitHub 源 | `github:<owner>/dsh-scnet-plan#v0.0.1` | 免 clone，依赖 pnpm 的 github 规格 |
-| npm（可选，需先发布） | `dsh-scnet-plan` | 发布到 npm 后一行安装 |
+| GitHub 源（推荐） | `github:<owner>/dsh-scnet-plan#v0.0.1` | 免 clone，pnpm 直接拉取 |
+| Release 压缩包 | `https://github.com/<owner>/dsh-scnet-plan/releases/download/v0.0.1/dsh-scnet-plan-0.0.1.tgz` | 无 git 也能装 |
+| 本地 clone | `/绝对路径/dsh-scnet-plan` | 开发、排错 |
+| npm（发布后） | `dsh-scnet-plan` | 最省事，一行 |
+
+> 打 tag 后 `.github/workflows/release.yml` 会自动跑测试、`npm pack` 并把 `.tgz` 上传到 Release；tarball 直链安装依赖这一步。
 
 ## 6. 发布到 npm（可选）
 
-当前未发布 npm。若要发布：
+当前不在 npm 上。想启用“一行安装”：
 
-```bash
-npm login
-npm publish --access public
-```
+1. 注册 npm 账号（若包名 `dsh-scnet-plan` 可用）；
+2. 生成 Automation token：npm → Access Tokens → Generate New Token；
+3. 在 GitHub 仓库 Settings → Secrets and variables → Actions 新建 `NPM_TOKEN`；
+4. 打 tag 后 `release.yml` 会自动 `npm publish --access public`（没有 secret 时会跳过，只发 GitHub Release）。
 
-之后用户可直接：
+之后用户可以直接：
 
 ```text
 plugin_manager install_bundle  target = dsh-scnet-plan
 ```
 
-注意：npm 包名 `dsh-scnet-plan` 需在 npm 上可用；发布后把 README 的安装方式改成 npm 优先。
+**本地发布**也可以（首次需要 `npm login`）。如果遇到 npm 缓存权限报错：
+
+```bash
+sudo chown -R 501:20 ~/.npm
+```
+
+注意：npm 包名/版本不可复用，发布后要 bump 版本再发。
 
 ## 7. 发布前检查清单
 
