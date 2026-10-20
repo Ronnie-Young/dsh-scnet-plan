@@ -317,7 +317,13 @@ export function apply(ctx, config) {
         name: 'get_scnet_plan',
         description:
           'Read the SCNet (超算互联网) Token Plan of the configured credential: monthly Credits granted/used/remaining, plan tier, validity window, and covered models. Use it when the user asks about remaining credits, quota, 套餐余量, or whether the plan is running out.',
-        parameters: {},
+        // 这个工具没有入参，但 parameters 必须是一个完整的 JSON Schema：
+        // 写成 `{}` 会缺少 `type`，DeepSeek 等上游会按 `type: null` 拒绝整个请求
+        // （Invalid schema for function 'get_scnet_plan'），而不是在调用时才报错。
+        parameters: {
+          type: 'object',
+          properties: {},
+        },
         output: {
           schema: planToolSchema,
           render: (_args, value) => [{ type: 'text', text: formatPlan(value) }],

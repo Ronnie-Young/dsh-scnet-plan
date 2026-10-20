@@ -129,7 +129,7 @@ plugin_manager remove_bundle   target = dsh-scnet-plan
 plugin_manager install_bundle  target = /绝对路径/dsh-scnet-plan
 ```
 
-最后刷新页面。版本号遵循 `vX.Y.Z` 的 git tag，Release 页面会写每个版本的变更；`package.json` 的 `version` 与 tag 保持一致。
+最后刷新页面。版本号遵循 `vX.Y.Z` 的 git tag，Release 页面会写每个版本的变更；`package.json` 的 `version` 与 tag 保持一致。仓库创建、发版、npm 发布等完整流程见 [docs/publishing.md](docs/publishing.md)。
 
 ## 卸载
 
