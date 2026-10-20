@@ -115,7 +115,7 @@ sudo chown -R 501:20 ~/.npm
 插件市场索引不在本仓库，而是维护在独立仓库 [`dsh-plugins-market`](https://github.com/Ronnie-Young/dsh-plugins-market)（DSH format 1）：
 
 - 索引 URL（给用户添加）：
-  `https://raw.githubusercontent.com/Ronnie-Young/dsh-plugins-market/main/index.json`
+  `https://cdn.jsdelivr.net/gh/Ronnie-Young/dsh-plugins-market@main/index.json`
 - 市场的「添加索引源」由用户操作，插件/agent 不能代为添加。
 - 用户在「发现 → 管理索引源 → 添加索引源」填入 URL，之后就能在市场里看到 `dsh-scnet-plan` 并一键安装。
 
