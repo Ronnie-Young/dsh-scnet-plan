@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -13,6 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -21,22 +23,29 @@ jobs:
       - run: npm install --no-audit --no-fund
       - run: npm test
 
-      - name: Build tarball
+      - name: Resolve and verify the version tag
+        id: version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+          if [ "${GITHUB_REF_TYPE}" = "tag" ] && [ "${GITHUB_REF_NAME}" != "v$VERSION" ]; then
+            echo "Tag ${GITHUB_REF_NAME} does not match package.json version ${VERSION}" >&2
+            exit 1
+          fi
+
+      - name: Build the tarball
         run: npm pack
 
-      - name: Create the GitHub Release (if missing)
+      - name: Create or update the GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 ||
-            gh release create "$GITHUB_REF_NAME" --title "dsh-scnet-plan $GITHUB_REF_NAME" --generate-notes
+          TAG="${{ steps.version.outputs.tag }}"
+          gh release view "$TAG" >/dev/null 2>&1 ||
+            gh release create "$TAG" --title "dsh-scnet-plan $TAG" --generate-notes
+          gh release upload "$TAG" ./*.tgz --clobber
 
-      - name: Upload tarball to the GitHub Release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh release upload "$GITHUB_REF_NAME" ./*.tgz --clobber
-
-      # 可选：配置 NPM_TOKEN secret 后自动发布到 npm。
+      # 可选：仓库配置 NPM_TOKEN secret 后自动发布到 npm。
       - name: Publish to npm (optional)
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
