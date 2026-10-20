@@ -1,0 +1,17 @@
+# dsh-scnet-plan bundle layer.
+#
+# 安装后本文件作为 profile 的一个 bundle 层被加载。默认配置使用
+# SCNET_API_KEY（与 dsh 的 scnet provider 共用同一个凭据），无需额外设置。
+#
+# 覆盖任意字段时，请在 profile 自己的 cordis.patch.yml 里写（patch 会整体替换
+# config，所以要把需要保留的键一并写上）：
+#
+#   - id: scnet-plan
+#     config:
+#       apiKeyEnv: SCNET_API_KEY
+#       refreshIntervalSec: 300
+#
+# 也可以直接改下面这个 insert 行的 config（仅本地开发时建议）。
+- insert:
+    - id: scnet-plan
+      name: dsh-scnet-plan
