@@ -557,11 +557,12 @@ body[data-ds-dark-theme] .scp-panel{--scp-ok:#3ddc97;--scp-warn:#ffb547;--scp-da
 .scp-sep{width:1px;height:10px;background:var(--dsw-alias-border-l2);display:inline-block;margin:0 2px}
 .scp-hero{display:flex;align-items:center;justify-content:flex-start;gap:26px;margin-top:18px;flex-wrap:wrap}
 .scp-label{font-size:11px;color:var(--dsw-alias-label-secondary);letter-spacing:.01em}
-.scp-ring{--scp-p:0;width:104px;height:104px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;background:conic-gradient(var(--scp-ring,var(--scp-accent)) calc(var(--scp-p)*1%),var(--dsw-alias-bg-layer-2) 0)}
-.scp-ring-ok{--scp-ring:var(--scp-ok)}
-.scp-ring-warn{--scp-ring:var(--scp-warn)}
-.scp-ring-error{--scp-ring:var(--scp-danger)}
-.scp-ring-inner{width:78px;height:78px;border-radius:50%;background:var(--dsw-alias-bg-layer-1);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.scp-ring{position:relative;width:104px;height:104px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center}
+.scp-ring-svg{position:absolute;inset:0;display:block;width:104px;height:104px;overflow:visible}
+.scp-ring-ok{color:var(--scp-ok)}
+.scp-ring-warn{color:var(--scp-warn)}
+.scp-ring-error{color:var(--scp-danger)}
+.scp-ring-inner{position:relative;z-index:1;width:78px;height:78px;border-radius:50%;background:var(--dsw-alias-bg-layer-1);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
 .scp-ring-inner b{font-size:23px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
 .scp-ring-inner span{font-size:10px;color:var(--dsw-alias-label-secondary)}
 .scp-hero-value{display:flex;align-items:baseline;gap:6px;margin-top:4px;font-variant-numeric:tabular-nums}
@@ -1048,10 +1049,30 @@ body[data-ds-dark-theme] .scp-panel{--scp-ok:#3ddc97;--scp-warn:#ffb547;--scp-da
             'div',
             {
               className: `scp-ring scp-ring-${barTone}`,
-              style: { '--scp-p': leftPercent === null ? 0 : leftPercent },
               role: 'img',
               'aria-label': leftPercent === null ? '' : `${t('remaining')} ${percentText}`,
             },
+            (() => {
+              const radius = 46
+              const circumference = 2 * Math.PI * radius
+              const filled = circumference * ((leftPercent === null ? 0 : leftPercent) / 100)
+              return h(
+                'svg',
+                { className: 'scp-ring-svg', viewBox: '0 0 104 104', width: 104, height: 104, 'aria-hidden': 'true' },
+                h('circle', { cx: 52, cy: 52, r: radius, fill: 'none', stroke: 'var(--dsw-alias-bg-layer-2)', strokeWidth: 12 }),
+                h('circle', {
+                  cx: 52,
+                  cy: 52,
+                  r: radius,
+                  fill: 'none',
+                  stroke: 'currentColor',
+                  strokeWidth: 12,
+                  strokeLinecap: 'round',
+                  strokeDasharray: `${filled} ${circumference}`,
+                  transform: 'rotate(-90 52 52)',
+                }),
+              )
+            })(),
             h(
               'div',
               { className: 'scp-ring-inner' },
@@ -1433,7 +1454,7 @@ body[data-ds-dark-theme] .scp-panel{--scp-ok:#3ddc97;--scp-warn:#ffb547;--scp-da
           ? t('chipNoData')
           : left === null
             ? fmtNumber(snapshot.remainingCredits)
-            : `${left.toFixed(0)}%`
+            : `${left >= 10 ? Math.round(left) : left.toFixed(1)}%`
       return h(
         'button',
         { type: 'button', className: 'scp-chip', title: t('chipTitle'), onClick: () => openPanel() },

@@ -21,8 +21,8 @@ SCNet（超算互联网）的 Token Plan 按月发 Credits，但余额只有登�
 | 方式 | target | 说明 |
 | --- | --- | --- |
 | **插件市场**（发现页） | 先在「发现 → 管理索引源」添加 `https://cdn.jsdelivr.net/gh/Ronnie-Young/dsh-plugins-market@main/index.json`，再在市场里点安装 | 最接近“应用商店”的体验 |
-| **GitHub 源**（免 clone） | `github:Ronnie-Young/dsh-scnet-plan#v0.0.1` | pnpm 直接拉取，不用本地目录 |
-| **Release 压缩包** | `https://github.com/Ronnie-Young/dsh-scnet-plan/releases/download/v0.0.1/dsh-scnet-plan-0.0.1.tgz` | 从 GitHub Release 直链安装 |
+| **GitHub 源**（免 clone） | `github:Ronnie-Young/dsh-scnet-plan#v0.0.2` | pnpm 直接拉取，不用本地目录 |
+| **Release 压缩包** | `https://github.com/Ronnie-Young/dsh-scnet-plan/releases/download/v0.0.2/dsh-scnet-plan-0.0.2.tgz` | 从 GitHub Release 直链安装 |
 | 本地目录（开发/排错） | `/你的路径/dsh-scnet-plan` | 需要先 `git clone` |
 | npm（首次发布后启用） | `dsh-scnet-plan` | 发布后一行安装 |
 
@@ -44,7 +44,7 @@ https://cdn.jsdelivr.net/gh/Ronnie-Young/dsh-plugins-market@main/index.json
 
 打开 **设置 → SCNet 套餐**，两种方式任选：
 
-1. **短信验证码**（推荐）：填手机号 → 获取验证码 → 输入 6 位码 → 登录；
+1. **短信验证码**：填手机号 → 获取验证码 → 输入 6 位码 → 登录；
 2. **账号密码**：填账号密码，需要图形验证码时按提示输入。
 
 登录成功后插件会先用这个会话真读一次订阅，确认能读到额度才保存。
@@ -71,7 +71,7 @@ https://cdn.jsdelivr.net/gh/Ronnie-Young/dsh-plugins-market@main/index.json
 ```yaml
 - id: scnet-plan
   config:
-    refreshIntervalSec: 300   # 秒；0 = 只手动刷新
+    refreshIntervalSec: 60    # 秒；0 = 只手动刷新
     warnBelowPercent: 20      # 低于此比例转琥珀色
     tool: true                # 是否注册 get_scnet_plan
     accountLogin: true        # 是否允许设置页登录
@@ -87,7 +87,7 @@ https://cdn.jsdelivr.net/gh/Ronnie-Young/dsh-plugins-market@main/index.json
 | `consoleBaseUrl` | `https://www.scnet.cn` | 控制台地址 |
 | `apiBasePath` | `/api/llm/v1` | 网关路径前缀 |
 | `consoleCookieEnv` | `SCNET_CONSOLE_COOKIE` | 会话 Cookie 的凭据引用名 |
-| `refreshIntervalSec` | `300` | 缓存与自动刷新间隔 |
+| `refreshIntervalSec` | `60` | 缓存与自动刷新间隔 |
 | `requestTimeoutMs` | `15000` | 单次请求超时 |
 | `includeModels` | `true` | 是否附带模型列表与套餐目录 |
 | `warnBelowPercent` | `20` | 预警线 |
@@ -105,7 +105,7 @@ https://cdn.jsdelivr.net/gh/Ronnie-Young/dsh-plugins-market@main/index.json
 还没登录。去 设置 → SCNet 套餐 登录一次。
 
 **数字一直不变？**
-默认 5 分钟刷新一次；点面板右上角「刷新」可立即拉取。SCNet 自己的统计也有约 5 分钟延迟。
+默认 1 分钟刷新一次；点面板右上角「刷新」可立即拉取。SCNet 自己的统计有约 5 分钟延迟，面板数字可能滞后于实时用量。
 
 **过几天又提示登录失效？**
 会话 Cookie 会过期，重新登录一次即可。密码和验证码从不保存。

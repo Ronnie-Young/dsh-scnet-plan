@@ -72,8 +72,8 @@ plugin_manager install_bundle  target = /绝对路径/dsh-scnet-plan
 
 | 方式 | target | 适用 |
 | --- | --- | --- |
-| GitHub 源（推荐） | `github:<owner>/dsh-scnet-plan#v0.0.1` | 免 clone，pnpm 直接拉取 |
-| Release 压缩包 | `https://github.com/<owner>/dsh-scnet-plan/releases/download/v0.0.1/dsh-scnet-plan-0.0.1.tgz` | 无 git 也能装 |
+| GitHub 源（推荐） | `github:<owner>/dsh-scnet-plan#v0.0.2` | 免 clone，pnpm 直接拉取 |
+| Release 压缩包 | `https://github.com/<owner>/dsh-scnet-plan/releases/download/v0.0.2/dsh-scnet-plan-0.0.2.tgz` | 无 git 也能装 |
 | 本地 clone | `/绝对路径/dsh-scnet-plan` | 开发、排错 |
 | npm（发布后） | `dsh-scnet-plan` | 最省事，一行 |
 

@@ -40,7 +40,7 @@ export const Config = Schema.object({
   consoleCookieEnv: Schema.string()
     .default('SCNET_CONSOLE_COOKIE')
     .description('保存 scnet.cn 控制台 Cookie 的凭据引用名；有它才能读到真实额度消耗。'),
-  refreshIntervalSec: Schema.number().default(300).description('缓存与自动刷新间隔（秒）；0 表示只手动刷新。'),
+  refreshIntervalSec: Schema.number().default(60).description('缓存与自动刷新间隔（秒）；0 表示只手动刷新。'),
   requestTimeoutMs: Schema.number().default(15_000).description('单次请求超时（毫秒）。'),
   includeModels: Schema.boolean().default(true).description('快照里附带网关模型列表与公开套餐目录。'),
   warnBelowPercent: Schema.number().default(20).description('剩余额度低于该百分比时，面板与徽标转为警示色。'),
