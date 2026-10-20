@@ -20,7 +20,7 @@ SCNet（超算互联网）的 Token Plan 按月发 Credits，但余额只有登�
 
 | 方式 | target | 说明 |
 | --- | --- | --- |
-| **插件市场**（发现页） | 先在「发现 → 管理索引源」添加 `https://cdn.jsdelivr.net/gh/Ronnie-Young/dsh-plugins-market@main/index.json`，再在市场里点安装 | 最接近“应用商店”的体验 |
+| **插件市场**（发现页） | 先在「发现 → 管理索引源」添加 `https://ronnie-young.github.io/dsh-plugins-market/index.json`，再在市场里点安装 | 最接近“应用商店”的体验 |
 | **GitHub 源**（免 clone） | `github:Ronnie-Young/dsh-scnet-plan#v0.0.2` | pnpm 直接拉取，不用本地目录 |
 | **Release 压缩包** | `https://github.com/Ronnie-Young/dsh-scnet-plan/releases/download/v0.0.2/dsh-scnet-plan-0.0.2.tgz` | 从 GitHub Release 直链安装 |
 | 本地目录（开发/排错） | `/你的路径/dsh-scnet-plan` | 需要先 `git clone` |
@@ -35,10 +35,10 @@ SCNet（超算互联网）的 Token Plan 按月发 Credits，但余额只有登�
 本插件收录在个人维护的市场仓库 [dsh-plugins-market](https://github.com/Ronnie-Young/dsh-plugins-market) 里。添加一次索引源后，就能在 DSH 的「发现」页安装和更新：
 
 ```text
-https://cdn.jsdelivr.net/gh/Ronnie-Young/dsh-plugins-market@main/index.json
+https://ronnie-young.github.io/dsh-plugins-market/index.json
 ```
 
-打开 **插件 → 发现 → 管理索引源 → 添加索引源**，粘贴上面的地址即可（索引源只能由用户手动添加）。`raw.githubusercontent.com` 在部分网络会超时，所以用 jsDelivr；备用 Pages 地址见市场仓库 README。
+打开 **插件 → 发现 → 管理索引源 → 添加索引源**，粘贴上面的地址即可（索引源只能由用户手动添加）。`raw.githubusercontent.com` 在部分网络会超时，所以用 GitHub Pages；备用 jsDelivr 地址见市场仓库 README。
 
 ## 第一次使用：登录一次
 
