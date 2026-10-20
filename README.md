@@ -10,9 +10,9 @@ SCNet（超算互联网）的 Token Plan 按月发 Credits，但余额只有登�
 - 输入框下方有个小徽标，随时显示剩余百分比；
 - 直接问模型「我还剩多少额度」，它会用 `get_scnet_plan` 自己查。
 
-| 浅色 | 深色 |
-| --- | --- |
-| ![面板浅色](docs/panel-after.png) | ![面板深色](docs/panel-after-dark.png) |
+![面板界面：左侧浅色，右侧深色](docs/panel-themes.png)
+
+*左：浅色　右：深色（同一界面，只是主题不同）*
 
 ## 安装
 
