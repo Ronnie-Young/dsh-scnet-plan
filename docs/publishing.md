@@ -109,3 +109,22 @@ sudo chown -R 501:20 ~/.npm
 - [ ] 版本号、CHANGELOG、tag 三处一致
 - [ ] 没有提交 `node_modules/`、`.credentials.yaml`、真实 Cookie / API Key
 - [ ] 截图（`docs/panel-*.png`）与当前 UI 一致
+
+## 8. 插件市场索引
+
+DSH 的插件市场读取一个 **format 1 JSON**（本仓库 `market/index.json`），「发现」页里可以添加索引 URL 并浏览安装。
+
+- 索引 URL（可直接给用户）：
+  `https://raw.githubusercontent.com/<owner>/dsh-scnet-plan/main/market/index.json`
+- 市场的「添加索引源」由用户操作，插件/agent 不能代为添加。
+- 用户在「发现 → 管理索引源 → 添加索引源」填入上面的 URL，之后就能在市场里看到 `dsh-scnet-plan` 并一键安装。
+
+### 每次发版要更新索引
+
+`market/index.json` 里每个版本要写 `source: { type: "git", url, commit }`，`commit` 必须是**40 位完整 SHA**（市场安装就是 `git+https://...#<commit>`）。发版流程：
+
+1. 推代码、打 tag；
+2. 把新 tag 的 commit SHA 写进 `market/index.json` 的 `versions[0]`，并加上新版本条目；
+3. 提交索引文件（可直接在 GitHub 网页编辑，或本地提交后推送）。
+
+`engines.dsh` 是兼容的 DSH 版本范围（当前用 `>=0.2.1-rc.2`），与本机运行版本保持一致即可。
