@@ -1,0 +1,68 @@
+{
+  "name": "dsh-scnet-plan",
+  "version": "0.0.1",
+  "description": "DeepSeek Harness 插件：在 DSH 内查看 SCNet（超算互联网）Token Plan 的 Credits 额度、每日消耗与 token 构成，支持短信/密码登录。",
+  "type": "module",
+  "license": "MIT",
+  "author": "Ronnie-Young",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    },
+    "./client": "./client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "client.js",
+    "lib",
+    "cordis.patch.yml",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "docs"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-slots",
+        "@deepseek-ai/dsh-client-locale"
+      ]
+    }
+  },
+  "dependencies": {
+    "@deepseek-ai/schemastery": "^3.18.5"
+  },
+  "scripts": {
+    "test": "node --test --test-timeout=30000 test/*.test.mjs",
+    "probe": "node scripts/probe.mjs"
+  },
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "scnet",
+    "token",
+    "quota",
+    "usage"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ronnie-Young/dsh-scnet-plan.git"
+  },
+  "homepage": "https://github.com/Ronnie-Young/dsh-scnet-plan#readme",
+  "bugs": {
+    "url": "https://github.com/Ronnie-Young/dsh-scnet-plan/issues"
+  }
+}
