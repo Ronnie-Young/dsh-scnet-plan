@@ -119,17 +119,15 @@ sudo chown -R 501:20 ~/.npm
 - 市场的「添加索引源」由用户操作，插件/agent 不能代为添加。
 - 用户在「发现 → 管理索引源 → 添加索引源」填入 URL，之后就能在市场里看到 `dsh-scnet-plan` 并一键安装。
 
-### 每次发版要更新市场索引
+### 发版后索引自动更新
 
-`index.json` 里每个版本写 `source: { type: "git", url, commit }`，`commit` 必须是**40 位完整 SHA**（市场安装就是 `git+https://...#<commit>`）。
+不需要手动改 `index.json`：
 
-发版流程：
+- `dsh-plugins-market` 的 `sync.yml` 每小时检查本仓库最新 Release，自动写入版本与 commit 并提交；
+- 想发版后立即同步：在本仓库配置 `MARKET_TOKEN`（有 market 仓库写权限的 PAT），`release.yml` 会 `repository_dispatch` 触发同步；
+- 也可以到 market 仓库 Actions 手动 Run workflow。
 
-1. 本仓库推代码、打 tag；
-2. 打开 `dsh-plugins-market`，把新版本条目和 commit SHA 写进 `index.json`；
-3. 在 `dsh-plugins-market` 里 `npm run validate` 后提交推送（CI 会再校验一次）。
-
-`engines.dsh` 是兼容的 DSH 版本范围（当前 `>=0.2.1-rc.2`），与本机运行版本保持一致即可。
+`engines.dsh` 是兼容的 DSH 版本范围（当前 `>=0.2.1-rc.2`）。
 
 ## 9. 推送超时的备用方案
 

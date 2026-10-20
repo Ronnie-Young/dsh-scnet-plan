@@ -38,7 +38,7 @@ SCNet（超算互联网）的 Token Plan 按月发 Credits，但余额只有登�
 https://ronnie-young.github.io/dsh-plugins-market/index.json
 ```
 
-打开 **插件 → 发现 → 管理索引源 → 添加索引源**，粘贴上面的地址即可（索引源只能由用户手动添加）。`raw.githubusercontent.com` 在部分网络会超时，所以用 GitHub Pages；备用 jsDelivr 地址见市场仓库 README。
+打开 **插件 → 发现 → 管理索引源 → 添加索引源**，粘贴上面的地址即可（索引源只能由用户手动添加）。索引由 GitHub Actions 自动同步版本，无需手动维护。
 
 ## 第一次使用：登录一次
 
