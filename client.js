@@ -1003,6 +1003,18 @@ body[data-ds-dark-theme] .scp-panel{--scp-ok:#3ddc97;--scp-warn:#ffb547;--scp-da
     }
 
     /** 额度 + 用量：单卡片、细分割线、无嵌套色块。 */
+    /**
+     * 圆环几何：圆帽端点会额外伸出半个线宽，按百分比直接画会在接近 100% 时两端重叠，
+     * 顶部出现缺口/台阶。这里补偿可见弧长，极小比例改用平头，保证读数真实。
+     */
+    function ringGeometry(percent, circumference, stroke) {
+      if (percent === null || !Number.isFinite(percent) || percent <= 0) return { dash: 0, cap: 'butt' }
+      const visible = (circumference * Math.min(100, percent)) / 100
+      if (percent >= 99.9) return { dash: circumference, cap: 'butt' }
+      if (visible >= stroke * 1.5) return { dash: Math.max(0.5, visible - stroke), cap: 'round' }
+      return { dash: Math.max(0.75, visible), cap: 'butt' }
+    }
+
     function UsageDetails(props) {
       const snapshot = props?.snapshot
       const state = props?.state
@@ -1063,23 +1075,26 @@ body[data-ds-dark-theme] .scp-panel{--scp-ok:#3ddc97;--scp-warn:#ffb547;--scp-da
             },
             (() => {
               const radius = 46
+              const stroke = 12
               const circumference = 2 * Math.PI * radius
-              const filled = circumference * ((leftPercent === null ? 0 : leftPercent) / 100)
+              const ring = ringGeometry(leftPercent, circumference, stroke)
               return h(
                 'svg',
                 { className: 'scp-ring-svg', viewBox: '0 0 104 104', width: 104, height: 104, 'aria-hidden': 'true' },
-                h('circle', { cx: 52, cy: 52, r: radius, fill: 'none', stroke: 'var(--dsw-alias-bg-layer-2)', strokeWidth: 12 }),
-                h('circle', {
-                  cx: 52,
-                  cy: 52,
-                  r: radius,
-                  fill: 'none',
-                  stroke: 'currentColor',
-                  strokeWidth: 12,
-                  strokeLinecap: 'round',
-                  strokeDasharray: `${filled} ${circumference}`,
-                  transform: 'rotate(-90 52 52)',
-                }),
+                h('circle', { cx: 52, cy: 52, r: radius, fill: 'none', stroke: 'var(--dsw-alias-bg-layer-2)', strokeWidth: stroke }),
+                ring.dash > 0
+                  ? h('circle', {
+                      cx: 52,
+                      cy: 52,
+                      r: radius,
+                      fill: 'none',
+                      stroke: 'currentColor',
+                      strokeWidth: stroke,
+                      strokeLinecap: ring.cap,
+                      strokeDasharray: `${ring.dash} ${circumference}`,
+                      transform: 'rotate(-90 52 52)',
+                    })
+                  : null,
               )
             })(),
             h(

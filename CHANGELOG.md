@@ -6,6 +6,7 @@
 
 - 输入框徽标新增「本话题」累计 Credits 估算；
 - 每条消息末尾新增「本轮」Credits 估算（读取该回合 token 用量，按 SCNet 模型单价折算）；
+- 圆环按端点补偿重画：不再出现接近 100% 时圆帽重叠的缺口，100% 为无缝整圆，小比例保持真实弧长；
 - Credits 只在当前模型属于 SCNet 时显示（按会话 provider 或 SCNet 模型目录判断），其他供应商模型只显示额度百分比；
 - Host 快照新增 `modelRates`（来自 `/acx/llm/api/console/model`），新增 `creditInputPer1K` / `creditCachedPer1K` / `creditOutputPer1K` 兜底单价配置；单价接口不可用时自动退回归配置。
 

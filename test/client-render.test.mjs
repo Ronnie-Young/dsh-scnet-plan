@@ -109,7 +109,7 @@ function loadClient() {
   vm.createContext(sandbox)
   const instrumented = source.replace(
     'return { inject, apply }',
-    'return { inject, apply, __debug: { UsageDetails, PlanPanel, SettingsSection, Catalog, CookieCallout, LoginForm, UsageChip, TurnCredits, PanelIcon, store } }',
+    'return { inject, apply, __debug: { UsageDetails, PlanPanel, SettingsSection, Catalog, CookieCallout, LoginForm, UsageChip, TurnCredits, PanelIcon, ringGeometry, store } }',
   )
   vm.runInContext(instrumented, sandbox, { filename: 'client.js' })
   const exports = loaded.factory((name) => (name === 'react' ? react.api : {}))
@@ -206,4 +206,29 @@ test('login form and the remaining components render', () => {
   assert.ok(render(load.debug.UsageChip).nodes.length > 0)
   assert.ok(render(load.debug.PanelIcon).nodes.length > 0)
   assert.deepEqual(load.errors, [])
+})
+
+test('ringGeometry keeps the ring a clean circle at every percentage', () => {
+  const { ringGeometry } = load.debug
+  const circumference = 2 * Math.PI * 46
+  const stroke = 12
+  const full = ringGeometry(100, circumference, stroke)
+  assert.equal(full.cap, 'butt')
+  assert.equal(full.dash, circumference)
+
+  const high = ringGeometry(96, circumference, stroke)
+  assert.equal(high.cap, 'round')
+  assert.ok(high.dash < (circumference * 96) / 100, 'compensates the round caps')
+  assert.ok(high.dash > 0)
+
+  const low = ringGeometry(1, circumference, stroke)
+  assert.equal(low.cap, 'butt')
+  assert.ok(Math.abs(low.dash - (circumference * 1) / 100) < 0.01)
+
+  const zero = ringGeometry(0, circumference, stroke)
+  assert.equal(zero.dash, 0)
+  assert.equal(zero.cap, 'butt')
+  const empty = ringGeometry(null, circumference, stroke)
+  assert.equal(empty.dash, 0)
+  assert.equal(empty.cap, 'butt')
 })
