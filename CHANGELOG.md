@@ -2,6 +2,12 @@
 
 本项目从 0.0.1 开始公开版本；0.0.1 之前的版本是本地迭代（0.1.0 → 0.7.0），未单独发布。
 
+## 0.0.3 — 2026-10-21
+
+- 输入框徽标新增「本话题」累计 Credits 估算，任务运行中额外显示「本轮」Credits 估算（基于 DSH 会话 token 用量 × SCNet 模型单价）；
+- Host 快照新增 `modelRates`（来自 `/acx/llm/api/console/model`），新增 `creditInputPer1K` / `creditCachedPer1K` / `creditOutputPer1K` 兜底单价配置；
+- 单价接口不可用时自动退回归配置默认值，不影响面板额度显示。
+
 ## 0.0.2 — 2026-10-20
 
 - 圆环改用内联 SVG 绘制，修复深色主题下圆环被渲染成圆角矩形的问题；

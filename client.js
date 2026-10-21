@@ -136,6 +136,10 @@ window.__ModuleLoader__.load({
       refreshNow: '立即刷新',
       chipTitle: 'SCNet 套餐剩余额度（点击查看详情）',
       chipNoData: 'SCNet 套餐未连接',
+      topicUsage: '本话题',
+      turnUsage: '本轮',
+      creditUnit: 'Cr',
+      chipCreditsHint: ' Credits 按 token 用量与 SCNet 模型单价估算',
       hintMissingKey: '没有解析到凭据。请确认 SCNET_API_KEY 已写入 dsh 凭据或启动环境。',
       hintSession: '控制台登录态失效了。重新登录 www.scnet.cn，复制新的 Cookie 保存到「设置 → SCNet 套餐」。',
       hintNetwork: '网络或服务端异常，稍后会自动重试。',
@@ -254,6 +258,10 @@ window.__ModuleLoader__.load({
       refreshNow: 'Refresh now',
       chipTitle: 'SCNet plan balance (click for details)',
       chipNoData: 'SCNet plan not connected',
+      topicUsage: 'topic',
+      turnUsage: 'turn',
+      creditUnit: 'Cr',
+      chipCreditsHint: ' Credits estimated from tokens and SCNet model prices',
       hintMissingKey: 'No credential resolved. Make sure SCNET_API_KEY is stored in the dsh credential store.',
       hintSession: 'The console session expired. Sign in at www.scnet.cn again and save a fresh cookie in Settings → SCNet plan.',
       hintNetwork: 'Network or service error; it will retry automatically.',
@@ -1431,8 +1439,8 @@ body[data-ds-dark-theme] .scp-panel{--scp-ok:#3ddc97;--scp-warn:#ffb547;--scp-da
       )
     }
 
-    /** 输入框下方的紧凑徽标。 */
-    function UsageChip() {
+    /** 输入框下方的紧凑徽标：剩余百分比 + 本话题/本轮 Credits 估算。 */
+    function UsageChip(props) {
       const state = useSnapshot()
       usePolling()
       const snapshot = state.snapshot
@@ -1449,17 +1457,55 @@ body[data-ds-dark-theme] .scp-panel{--scp-ok:#3ddc97;--scp-warn:#ffb547;--scp-da
               : left !== null && left <= warnAt
                 ? 'warn'
                 : 'ok'
-      const text =
-        snapshot === null || snapshot.needsCookie === true
-          ? t('chipNoData')
-          : left === null
-            ? fmtNumber(snapshot.remainingCredits)
-            : `${left >= 10 ? Math.round(left) : left.toFixed(1)}%`
+
+      // Topic usage comes from the session projection DSH already shows as tokens.
+      const readProjection = typeof props?.useProjection === 'function' ? props.useProjection : () => undefined
+      const readSession = typeof props?.useSession === 'function' ? props.useSession : () => undefined
+      const usage = readProjection('tokenUsage')
+      const running = Boolean(readSession((value) => value?.running))
+      const model = readSession((value) => value?.modelSelection?.model ?? value?.model ?? null)
+      const fallbackRates = state.info?.creditRates ?? { input: 2, cached: 0.2, output: 8 }
+      const rate = (snapshot?.modelRates !== null && model !== null && snapshot?.modelRates?.[model]) || fallbackRates
+      const creditsOf = (value, prices) => {
+        if (!value || !prices) return null
+        const input = ((value.uncachedInputTokens ?? 0) + (value.cacheWriteTokens ?? 0)) / 1000
+        const cached = (value.cacheReadTokens ?? 0) / 1000
+        const output = (value.outputTokens ?? 0) / 1000
+        return input * prices.input + cached * prices.cached + output * prices.output
+      }
+      const topicCredits = creditsOf(usage, rate)
+      const turnRef = useRef({ running: false, base: null, last: null })
+      const turn = turnRef.current
+      if (running && !turn.running) {
+        turn.running = true
+        turn.base = topicCredits
+      } else if (!running && turn.running) {
+        turn.running = false
+        turn.last = topicCredits !== null && turn.base !== null ? Math.max(0, topicCredits - turn.base) : null
+      }
+      const turnCredits = running
+        ? topicCredits !== null && turn.base !== null
+          ? Math.max(0, topicCredits - turn.base)
+          : null
+        : turn.last
+      const creditsText = (value) => {
+        if (value === null || !Number.isFinite(value)) return null
+        if (value < 1000) return String(Math.round(value))
+        if (value < 10000) return `${(value / 1000).toFixed(1)}k`
+        return `${(value / 10000).toFixed(2)}万`
+      }
+      const topicText = snapshot !== null && snapshot.needsCookie !== true ? creditsText(topicCredits) : null
+      const turnText = snapshot !== null && snapshot.needsCookie !== true ? creditsText(turnCredits) : null
+
+      const parts = [`SCNet · ${snapshot === null || snapshot.needsCookie === true ? t('chipNoData') : left === null ? fmtNumber(snapshot.remainingCredits) : `${left >= 10 ? Math.round(left) : left.toFixed(1)}%`}`]
+      if (topicText !== null) parts.push(`${t('topicUsage')} ≈${topicText} ${t('creditUnit')}`)
+      if (running && turnText !== null) parts.push(`${t('turnUsage')} ≈${turnText} ${t('creditUnit')}`)
+
       return h(
         'button',
-        { type: 'button', className: 'scp-chip', title: t('chipTitle'), onClick: () => openPanel() },
+        { type: 'button', className: 'scp-chip', title: `${t('chipTitle')}${topicText !== null ? t('chipCreditsHint') : ''}`, onClick: () => openPanel() },
         h('span', { className: `scp-dot scp-dot-${tone}` }),
-        h('span', null, `SCNet · ${text}`),
+        h('span', null, parts.join(' · ')),
       )
     }
 
