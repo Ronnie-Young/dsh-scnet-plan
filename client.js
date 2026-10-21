@@ -1548,7 +1548,7 @@ body[data-ds-dark-theme] .scp-panel{--scp-ok:#3ddc97;--scp-warn:#ffb547;--scp-da
       const topicText = creditsVisible ? creditsText(topicCredits) : null
 
       const parts = [`SCNet · ${snapshot === null || snapshot.needsCookie === true ? t('chipNoData') : left === null ? fmtNumber(snapshot.remainingCredits) : `${left >= 10 ? Math.round(left) : left.toFixed(1)}%`}`]
-      if (topicText !== null) parts.push(`${t('topicUsage')} ≈${topicText} ${t('creditUnit')}`)
+      if (topicText !== null) parts.push(`≈${topicText} ${t('creditUnit')}`)
 
       return h(
         'button',
