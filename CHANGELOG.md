@@ -2,14 +2,12 @@
 
 本项目从 0.0.1 开始公开版本；0.0.1 之前的版本是本地迭代（0.1.0 → 0.7.0），未单独发布。
 
-## 0.0.4 — 2026-10-21
-
-- Credits 估算只在当前模型属于 SCNet 时显示（按会话 provider 或 SCNet 模型目录判断）；切换到其他供应商的模型时，徽标只显示套餐剩余百分比，不再展示 Credits。
 ## 0.0.3 — 2026-10-21
 
-- 输入框徽标新增「本话题」累计 Credits 估算，任务运行中额外显示「本轮」Credits 估算（基于 DSH 会话 token 用量 × SCNet 模型单价）；
-- Host 快照新增 `modelRates`（来自 `/acx/llm/api/console/model`），新增 `creditInputPer1K` / `creditCachedPer1K` / `creditOutputPer1K` 兜底单价配置；
-- 单价接口不可用时自动退回归配置默认值，不影响面板额度显示。
+- 输入框徽标新增「本话题」累计 Credits 估算；
+- 每条消息末尾新增「本轮」Credits 估算（读取该回合 token 用量，按 SCNet 模型单价折算）；
+- Credits 只在当前模型属于 SCNet 时显示（按会话 provider 或 SCNet 模型目录判断），其他供应商模型只显示额度百分比；
+- Host 快照新增 `modelRates`（来自 `/acx/llm/api/console/model`），新增 `creditInputPer1K` / `creditCachedPer1K` / `creditOutputPer1K` 兜底单价配置；单价接口不可用时自动退回归配置。
 
 ## 0.0.2 — 2026-10-20
 

@@ -633,6 +633,7 @@ body[data-ds-dark-theme] .scp-panel{--scp-ok:#3ddc97;--scp-warn:#ffb547;--scp-da
 .scp-side-cell span{display:block;font-size:11px;color:var(--dsw-alias-label-secondary)}
 .scp-side-cell b{display:block;margin-top:3px;font-size:15px;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
 .scp-dot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:6px;vertical-align:middle}
+.scp-turn-credit{font-size:12px;color:var(--dsw-alias-label-secondary);margin-right:10px;white-space:nowrap;font-variant-numeric:tabular-nums}
 @media (max-width:760px){.scp-hero-side{margin-left:0;padding-left:0;border-left:0;grid-template-columns:repeat(2,minmax(110px,1fr));width:100%;gap:12px 20px}}
 
 @media (max-width:720px){.scp-metrics{grid-template-columns:repeat(2,1fr);row-gap:16px}.scp-metric{border-left:0;padding:0}.scp-hero-number{font-size:32px}}
@@ -1439,6 +1440,47 @@ body[data-ds-dark-theme] .scp-panel{--scp-ok:#3ddc97;--scp-warn:#ffb547;--scp-da
       )
     }
 
+    /** 消息末尾（回合尾部）的本轮 Credits 估算，取自该回合的 tokenUsage。 */
+    function TurnCredits(props) {
+      const state = useSnapshot()
+      const snapshot = state.snapshot
+      const readSession = typeof props?.useSession === 'function' ? props.useSession : () => undefined
+      const readChat = typeof props?.useChat === 'function' ? props.useChat : () => undefined
+      const selection = readSession((value) => value?.modelSelection?.next ?? value?.modelSelection?.lastUsed ?? null)
+      const provider = selection?.provider ?? null
+      const modelId = selection?.model ?? null
+      const scnetModels = Array.isArray(snapshot?.models) ? snapshot.models : []
+      const isScnetModel =
+        provider !== null && String(provider).toLowerCase().includes('scnet')
+          ? true
+          : modelId !== null && scnetModels.some((entry) => (entry?.id ?? entry?.name) === modelId)
+      const nodes = readChat((value) => value?.nodes)
+      let usage = null
+      if (isScnetModel && nodes !== null && typeof nodes?.values === 'function' && props?.turn !== undefined) {
+        for (const node of nodes.values()) {
+          if (node?.kind === 'turn-tail' && String(node?.data?.turn) === String(props.turn)) {
+            usage = node?.data?.tokenUsage ?? null
+            break
+          }
+        }
+      }
+      const fallbackRates = state.info?.creditRates ?? { input: 2, cached: 0.2, output: 8 }
+      const rate = (isScnetModel && modelId !== null && snapshot?.modelRates?.[modelId]) || fallbackRates
+      const credits =
+        usage === null
+          ? null
+          : ((usage.uncachedInputTokens ?? 0) + (usage.cacheWriteTokens ?? 0)) / 1000 * rate.input +
+            (usage.cacheReadTokens ?? 0) / 1000 * rate.cached +
+            (usage.outputTokens ?? 0) / 1000 * rate.output
+      if (credits === null || !Number.isFinite(credits)) return null
+      const text = credits < 1000 ? String(Math.round(credits)) : credits < 10000 ? `${(credits / 1000).toFixed(1)}k` : `${(credits / 10000).toFixed(2)}万`
+      return h(
+        'span',
+        { className: 'scp-turn-credit', title: t('chipCreditsHint') },
+        `${t('turnUsage')} ≈${text} ${t('creditUnit')}`,
+      )
+    }
+
     /** 输入框下方的紧凑徽标：剩余百分比 + 本话题/本轮 Credits 估算。 */
     function UsageChip(props) {
       const state = useSnapshot()
@@ -1504,11 +1546,9 @@ body[data-ds-dark-theme] .scp-panel{--scp-ok:#3ddc97;--scp-warn:#ffb547;--scp-da
       }
       const creditsVisible = snapshot !== null && snapshot.needsCookie !== true && isScnetModel
       const topicText = creditsVisible ? creditsText(topicCredits) : null
-      const turnText = creditsVisible ? creditsText(turnCredits) : null
 
       const parts = [`SCNet · ${snapshot === null || snapshot.needsCookie === true ? t('chipNoData') : left === null ? fmtNumber(snapshot.remainingCredits) : `${left >= 10 ? Math.round(left) : left.toFixed(1)}%`}`]
       if (topicText !== null) parts.push(`${t('topicUsage')} ≈${topicText} ${t('creditUnit')}`)
-      if (running && turnText !== null) parts.push(`${t('turnUsage')} ≈${turnText} ${t('creditUnit')}`)
 
       return h(
         'button',
@@ -1551,6 +1591,10 @@ body[data-ds-dark-theme] .scp-panel{--scp-ok:#3ddc97;--scp-warn:#ffb547;--scp-da
         // 设置 → SCNet 套餐
         ctx.slots.inject('settings.section', () =>
           ctx.slots.register({ name: 'settings.section', id: PANEL_KEY, order: 75, label: () => t('settingsTitle'), locale: NS }, SettingsSection),
+        )
+        // 消息末尾：本轮 Credits
+        ctx.slots.inject('conversation.chat.turnTail', () =>
+          ctx.slots.register({ name: 'conversation.chat.turnTail', id: `${PANEL_KEY}-turn-credits`, order: 10, locale: NS }, TurnCredits),
         )
         // 输入框下方徽标
         ctx.slots.inject('conversation.composer.dock', () =>

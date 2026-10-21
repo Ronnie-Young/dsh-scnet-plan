@@ -1,6 +1,6 @@
 {
   "name": "dsh-scnet-plan",
-  "version": "0.0.4",
+  "version": "0.0.3",
   "description": "DeepSeek Harness 插件：在 DSH 内查看 SCNet（超算互联网）Token Plan 的 Credits 额度、每日消耗与 token 构成，支持短信/密码登录。",
   "type": "module",
   "license": "MIT",

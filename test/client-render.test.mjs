@@ -109,7 +109,7 @@ function loadClient() {
   vm.createContext(sandbox)
   const instrumented = source.replace(
     'return { inject, apply }',
-    'return { inject, apply, __debug: { UsageDetails, PlanPanel, SettingsSection, Catalog, CookieCallout, LoginForm, UsageChip, PanelIcon, store } }',
+    'return { inject, apply, __debug: { UsageDetails, PlanPanel, SettingsSection, Catalog, CookieCallout, LoginForm, UsageChip, TurnCredits, PanelIcon, store } }',
   )
   vm.runInContext(instrumented, sandbox, { filename: 'client.js' })
   const exports = loaded.factory((name) => (name === 'react' ? react.api : {}))
@@ -167,7 +167,7 @@ const load = loadClient()
 
 test('client bundle registers all four slots and applies cleanly', () => {
   const names = load.registered.map((item) => item.definition.name)
-  assert.deepEqual(names, ['sidebar.panellist', 'main', 'settings.section', 'conversation.composer.dock'])
+  assert.deepEqual(names, ['sidebar.panellist', 'main', 'settings.section', 'conversation.chat.turnTail', 'conversation.composer.dock'])
   assert.deepEqual(load.errors, [])
 })
 
