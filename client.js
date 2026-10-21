@@ -1463,9 +1463,17 @@ body[data-ds-dark-theme] .scp-panel{--scp-ok:#3ddc97;--scp-warn:#ffb547;--scp-da
       const readSession = typeof props?.useSession === 'function' ? props.useSession : () => undefined
       const usage = readProjection('tokenUsage')
       const running = Boolean(readSession((value) => value?.running))
-      const model = readSession((value) => value?.modelSelection?.model ?? value?.model ?? null)
+      const selection = readSession((value) => value?.modelSelection?.next ?? value?.modelSelection?.lastUsed ?? null)
+      const provider = selection?.provider ?? null
+      const modelId = selection?.model ?? null
+      const scnetModels = Array.isArray(snapshot?.models) ? snapshot.models : []
+      // Credits only apply to requests billed by the SCNet Token Plan.
+      const isScnetModel =
+        provider !== null && String(provider).toLowerCase().includes('scnet')
+          ? true
+          : modelId !== null && scnetModels.some((entry) => (entry?.id ?? entry?.name) === modelId)
       const fallbackRates = state.info?.creditRates ?? { input: 2, cached: 0.2, output: 8 }
-      const rate = (snapshot?.modelRates !== null && model !== null && snapshot?.modelRates?.[model]) || fallbackRates
+      const rate = (isScnetModel && modelId !== null && snapshot?.modelRates?.[modelId]) || fallbackRates
       const creditsOf = (value, prices) => {
         if (!value || !prices) return null
         const input = ((value.uncachedInputTokens ?? 0) + (value.cacheWriteTokens ?? 0)) / 1000
@@ -1494,8 +1502,9 @@ body[data-ds-dark-theme] .scp-panel{--scp-ok:#3ddc97;--scp-warn:#ffb547;--scp-da
         if (value < 10000) return `${(value / 1000).toFixed(1)}k`
         return `${(value / 10000).toFixed(2)}万`
       }
-      const topicText = snapshot !== null && snapshot.needsCookie !== true ? creditsText(topicCredits) : null
-      const turnText = snapshot !== null && snapshot.needsCookie !== true ? creditsText(turnCredits) : null
+      const creditsVisible = snapshot !== null && snapshot.needsCookie !== true && isScnetModel
+      const topicText = creditsVisible ? creditsText(topicCredits) : null
+      const turnText = creditsVisible ? creditsText(turnCredits) : null
 
       const parts = [`SCNet · ${snapshot === null || snapshot.needsCookie === true ? t('chipNoData') : left === null ? fmtNumber(snapshot.remainingCredits) : `${left >= 10 ? Math.round(left) : left.toFixed(1)}%`}`]
       if (topicText !== null) parts.push(`${t('topicUsage')} ≈${topicText} ${t('creditUnit')}`)
