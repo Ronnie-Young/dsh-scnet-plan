@@ -232,3 +232,15 @@ test('ringGeometry keeps the ring a clean circle at every percentage', () => {
   assert.equal(empty.dash, 0)
   assert.equal(empty.cap, 'butt')
 })
+
+test('UsageDetails renders the ring socket with the new geometry', () => {
+  const nodes = render(load.debug.UsageDetails, {
+    snapshot: { ...SNAPSHOT, usedPercent: 4.49 },
+    state: { snapshot: { ...SNAPSHOT, usedPercent: 4.49 }, info: { warnBelowPercent: 20 }, error: null },
+    t: (key) => key,
+  })
+  const html = JSON.stringify(nodes)
+  assert.ok(html.includes('scp-ring'), 'renders the ring container')
+  assert.ok(html.includes('scp-ring-svg'), 'renders the SVG ring')
+  assert.deepEqual(load.errors, [])
+})
