@@ -137,10 +137,15 @@ test('apply registers the snapshot route, the tool and the settings policy', () 
   apply(ctx, config)
 
   assert.equal(name, 'scnet-plan')
-  assert.equal(registrations.routes.length, 2)
-  assert.equal(registrations.routes[0].path, '/scnet-plan/snapshot')
-  assert.equal(registrations.routes[0].kind, 'exact')
-  assert.equal(registrations.routes[1].path, '/scnet-plan/snapshot/login')
+  const paths = registrations.routes.map((route) => route.path)
+  assert.deepEqual(paths.sort(), [
+    '/scnet-plan/snapshot',
+    '/scnet-plan/snapshot/client-report',
+    '/scnet-plan/snapshot/client-status',
+    '/scnet-plan/snapshot/login',
+  ])
+  const snapshotRoute = registrations.routes.find((route) => route.path === '/scnet-plan/snapshot')
+  assert.equal(snapshotRoute.kind, 'exact')
   assert.equal(registrations.tools.length, 1)
   assert.equal(registrations.tools[0].name, 'get_scnet_plan')
   assert.equal(registrations.settingsConfigured, true)
@@ -153,7 +158,7 @@ test('GET returns the console reading when the cookie credential is present', as
   })
   try {
     apply(ctx, Config({}))
-    const answer = await callRoute(registrations.routes[0], { method: 'GET', url: '/scnet-plan/snapshot' })
+    const answer = await callRoute(registrations.routes.find((route) => route.path === '/scnet-plan/snapshot'), { method: 'GET', url: '/scnet-plan/snapshot' })
     assert.equal(answer.status, 200)
     assert.equal(answer.body.ok, true)
     assert.equal(answer.body.snapshot.planName, '基础版')
@@ -171,7 +176,7 @@ test('POST stores the pasted console cookie and clears it on an empty value', as
   const { ctx, registrations, credentialsStore } = fakeCtx({ credentialsStore: { SCNET_API_KEY: 'sk-tp-test' } })
   try {
     apply(ctx, Config({}))
-    const saved = await callRoute(registrations.routes[0], {
+    const saved = await callRoute(registrations.routes.find((route) => route.path === '/scnet-plan/snapshot'), {
       method: 'POST',
       url: '/scnet-plan/snapshot',
       body: { cookie: 'Cookie: session=abc; uid=42' },
@@ -180,7 +185,7 @@ test('POST stores the pasted console cookie and clears it on an empty value', as
     assert.equal(saved.body.ok, true)
     assert.equal(saved.body.snapshot.source, 'console')
 
-    const cleared = await callRoute(registrations.routes[0], {
+    const cleared = await callRoute(registrations.routes.find((route) => route.path === '/scnet-plan/snapshot'), {
       method: 'POST',
       url: '/scnet-plan/snapshot',
       body: { cookie: '' },
@@ -201,7 +206,7 @@ test('GET stays ok=false with a SESSION_REQUIRED error when the stored cookie is
   })
   try {
     apply(ctx, Config({}))
-    const answer = await callRoute(registrations.routes[0], { method: 'GET', url: '/scnet-plan/snapshot?refresh=1' })
+    const answer = await callRoute(registrations.routes.find((route) => route.path === '/scnet-plan/snapshot'), { method: 'GET', url: '/scnet-plan/snapshot?refresh=1' })
     assert.equal(answer.body.ok, false)
     assert.equal(answer.body.error.code, 'SESSION_REQUIRED')
   } finally {

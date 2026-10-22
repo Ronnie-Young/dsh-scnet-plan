@@ -263,6 +263,36 @@ export function apply(ctx, config) {
         )
       }
 
+      // 诊断：浏览器端上报它实际运行的构建与关键判定，便于定位“装了却没生效”。
+      let clientReports = {}
+      let clientReportAt = null
+
+      registerJsonRoute(
+        `${config.routePath}/client-report`,
+        async (req) => {
+          if (req.method !== 'POST') {
+            return { ok: false, error: { code: 'METHOD_NOT_ALLOWED', message: 'POST only' } }
+          }
+          let body = {}
+          try {
+            body = await readJsonBody(req)
+          } catch (error) {
+            return { ok: false, error: { code: 'BAD_REQUEST', message: 'invalid body' } }
+          }
+          const phase = typeof body.phase === 'string' ? body.phase : 'unknown'
+          clientReports = { ...clientReports, [phase]: body }
+          clientReportAt = new Date().toISOString()
+          return { ok: true }
+        },
+        `webServer.register(${config.routePath}/client-report)`,
+      )
+
+      registerJsonRoute(
+        `${config.routePath}/client-status`,
+        async () => ({ ok: true, at: clientReportAt, reports: clientReports }),
+        `webServer.register(${config.routePath}/client-status)`,
+      )
+
       registerJsonRoute(
         config.routePath,
         async (req, signal) => {

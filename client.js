@@ -18,6 +18,20 @@ window.__ModuleLoader__.load({
 const VERSION = '0.0.3'
 const BUILD_RAW = '__SCNET_BUILD__'
 const BUILD_LABEL = BUILD_RAW.startsWith('__') ? 'dev' : BUILD_RAW
+let lastReportKey = ''
+function reportClientStatus(payload) {
+  try {
+    const key = JSON.stringify(payload)
+    if (key === lastReportKey) return
+    lastReportKey = key
+    fetch('/scnet-plan/snapshot/client-report', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ build: BUILD_LABEL, version: VERSION, ...payload }),
+      keepalive: true,
+    }).catch(() => {})
+  } catch {}
+}
     const h = React.createElement
 
     const NS = 'scnet-plan'
@@ -560,6 +574,7 @@ const BUILD_LABEL = BUILD_RAW.startsWith('__') ? 'dev' : BUILD_RAW
 .scp-panel{padding:22px 26px;color:var(--dsw-alias-label-primary);
 --scp-ok:#12b76a;--scp-warn:#f79009;--scp-danger:#f04438;
 --scp-accent:#3b82f6;--scp-violet:#8b5cf6;--scp-teal:#14b8a6}
+body[data-ds-dark-theme] .scp-ring{--scp-ring-track:#3a3c40}
 body[data-ds-dark-theme] .scp-panel{--scp-ok:#3ddc97;--scp-warn:#ffb547;--scp-danger:#ff6b6b;--scp-accent:#7ea6ff;--scp-violet:#b39dff;--scp-teal:#4dd4d4}
 .scp-plan-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--dsw-alias-label-secondary)}
 .scp-plan-line b{font-size:14px;font-weight:600;color:var(--dsw-alias-label-primary)}
@@ -568,11 +583,13 @@ body[data-ds-dark-theme] .scp-panel{--scp-ok:#3ddc97;--scp-warn:#ffb547;--scp-da
 .scp-sep{width:1px;height:10px;background:var(--dsw-alias-border-l2);display:inline-block;margin:0 2px}
 .scp-hero{display:flex;align-items:center;justify-content:flex-start;gap:26px;margin-top:18px;flex-wrap:wrap}
 .scp-label{font-size:11px;color:var(--dsw-alias-label-secondary);letter-spacing:.01em}
-.scp-ring{position:relative;width:104px;height:104px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center}
+.scp-ring{--scp-ring-track:#e4e6e9;position:relative;width:104px;height:104px;flex:none;display:flex;align-items:center;justify-content:center}
+.scp-ring-fill{position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--scp-ring-color,var(--scp-ok)) 0 var(--scp-deg,0deg),var(--scp-ring-track) var(--scp-deg,0deg) 360deg)}
+.scp-ring-hole{position:absolute;inset:12px;border-radius:50%;background:var(--dsw-alias-bg-layer-1,#fff)}
 .scp-ring-svg{position:absolute;inset:0;display:block;width:104px;height:104px;overflow:visible}
-.scp-ring-ok{color:var(--scp-ok)}
-.scp-ring-warn{color:var(--scp-warn)}
-.scp-ring-error{color:var(--scp-danger)}
+.scp-ring-ok{--scp-ring-color:var(--scp-ok)}
+.scp-ring-warn{--scp-ring-color:var(--scp-warn)}
+.scp-ring-error{--scp-ring-color:var(--scp-danger)}
 .scp-ring-inner{position:relative;z-index:1;width:78px;height:78px;border-radius:50%;background:var(--dsw-alias-bg-layer-1);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
 .scp-ring-inner b{font-size:23px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
 .scp-ring-inner span{font-size:10px;color:var(--dsw-alias-label-secondary)}
@@ -636,7 +653,7 @@ body[data-ds-dark-theme] .scp-panel{--scp-ok:#3ddc97;--scp-warn:#ffb547;--scp-da
 .scp-side-cell span{display:block;font-size:11px;color:var(--dsw-alias-label-secondary)}
 .scp-side-cell b{display:block;margin-top:3px;font-size:15px;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
 .scp-dot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:6px;vertical-align:middle}
-.scp-turn-credit{font-size:12px;color:var(--dsw-alias-label-secondary);margin-right:10px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.scp-turn-credit{font-size:12px;color:var(--dsw-alias-label-secondary);white-space:nowrap;font-variant-numeric:tabular-nums}
 @media (max-width:760px){.scp-hero-side{margin-left:0;padding-left:0;border-left:0;grid-template-columns:repeat(2,minmax(110px,1fr));width:100%;gap:12px 20px}}
 
 @media (max-width:720px){.scp-metrics{grid-template-columns:repeat(2,1fr);row-gap:16px}.scp-metric{border-left:0;padding:0}.scp-hero-number{font-size:32px}}
@@ -1006,10 +1023,6 @@ body[data-ds-dark-theme] .scp-panel{--scp-ok:#3ddc97;--scp-warn:#ffb547;--scp-da
     }
 
     /** 额度 + 用量：单卡片、细分割线、无嵌套色块。 */
-    /**
-     * 圆环几何：圆帽端点会额外伸出半个线宽，按百分比直接画会在接近 100% 时两端重叠，
-     * 顶部出现缺口/台阶。这里补偿可见弧长，极小比例改用平头，保证读数真实。
-     */
     /** 判断当前模型选择是否属于 SCNet：provider 名，或模型在 SCNet 模型目录内。 */
     function isScnetSelection(selection, models) {
       if (selection === null || typeof selection !== 'object') return false
@@ -1024,15 +1037,43 @@ body[data-ds-dark-theme] .scp-panel{--scp-ok:#3ddc97;--scp-warn:#ffb547;--scp-da
       })
     }
 
-    function ringGeometry(percent, circumference, stroke) {
-      if (percent === null || !Number.isFinite(percent) || percent <= 0) return { dash: 0, cap: 'butt' }
-      const visible = (circumference * Math.min(100, percent)) / 100
-      if (percent >= 99.9) return { dash: circumference, cap: 'butt' }
-      if (visible >= stroke * 1.5) return { dash: Math.max(0.5, visible - stroke), cap: 'round' }
-      return { dash: Math.max(0.75, visible), cap: 'butt' }
+    /** 整圆路径（用于内外圆构成的实心环）。 */
+    function circlePath(cx, cy, r) {
+      return `M ${cx - r} ${cy} A ${r} ${r} 0 1 0 ${cx + r} ${cy} A ${r} ${r} 0 1 0 ${cx - r} ${cy} Z`
+    }
+
+    /** 实心环形扇区：外圈、内圈都是同一条圆，端点是从圆心出发的径向直线。 */
+    function annulusPath(cx, cy, outer, inner, startDeg, sweepDeg) {
+      if (sweepDeg <= 0) return ''
+      if (sweepDeg >= 359.999) return `${circlePath(cx, cy, outer)} ${circlePath(cx, cy, inner)}`
+      const a0 = ((startDeg - 90) * Math.PI) / 180
+      const a1 = ((startDeg + sweepDeg - 90) * Math.PI) / 180
+      const large = sweepDeg > 180 ? 1 : 0
+      const o0 = [cx + outer * Math.cos(a0), cy + outer * Math.sin(a0)]
+      const o1 = [cx + outer * Math.cos(a1), cy + outer * Math.sin(a1)]
+      const i0 = [cx + inner * Math.cos(a0), cy + inner * Math.sin(a0)]
+      const i1 = [cx + inner * Math.cos(a1), cy + inner * Math.sin(a1)]
+      return (
+        `M ${o0[0]} ${o0[1]} A ${outer} ${outer} 0 ${large} 1 ${o1[0]} ${o1[1]} ` +
+        `L ${i1[0]} ${i1[1]} A ${inner} ${inner} 0 ${large} 0 ${i0[0]} ${i0[1]} Z`
+      )
     }
 
     function UsageDetails(props) {
+      // 诊断：读取面板里真实渲染出来的圆环 DOM，确认屏幕上到底是哪份代码在画。
+      useEffect(() => {
+        if (typeof document === 'undefined') return
+        const ringEl = document.querySelector('.scp-ring')
+        const buildEl = document.querySelector('.scp-build')
+        reportClientStatus({
+          phase: 'ring-dom',
+          build: buildEl === null ? null : buildEl.textContent,
+          hasSvg: ringEl !== null && ringEl.querySelector('svg') !== null,
+          paths: ringEl === null ? -1 : ringEl.querySelectorAll('path').length,
+          circles: ringEl === null ? -1 : ringEl.querySelectorAll('circle').length,
+          html: ringEl === null ? null : ringEl.outerHTML.slice(0, 420),
+        })
+      }, [])
       const snapshot = props?.snapshot
       const state = props?.state
       if (!snapshot) return null
@@ -1091,29 +1132,14 @@ body[data-ds-dark-theme] .scp-panel{--scp-ok:#3ddc97;--scp-warn:#ffb547;--scp-da
               'aria-label': leftPercent === null ? '' : `${t('remaining')} ${percentText}`,
             },
             (() => {
-              const radius = 46
-              const stroke = 12
-              const circumference = 2 * Math.PI * radius
-              const ring = ringGeometry(leftPercent, circumference, stroke)
-              return h(
-                'svg',
-                { className: 'scp-ring-svg', viewBox: '0 0 104 104', width: 104, height: 104, 'aria-hidden': 'true' },
-                h('circle', { cx: 52, cy: 52, r: radius, fill: 'none', stroke: 'var(--dsw-alias-bg-layer-2)', strokeWidth: stroke }),
-                ring.dash > 0
-                  ? h('circle', {
-                      cx: 52,
-                      cy: 52,
-                      r: radius,
-                      fill: 'none',
-                      stroke: 'currentColor',
-                      strokeWidth: stroke,
-                      strokeLinecap: ring.cap,
-                      strokeDasharray: `${ring.dash} ${circumference}`,
-                      transform: 'rotate(-90 52 52)',
-                    })
-                  : null,
-              )
+              const percent = leftPercent === null || !Number.isFinite(leftPercent) ? 0 : Math.min(100, Math.max(0, leftPercent))
+              reportClientStatus({ phase: 'ring', percent, mode: 'css-conic' })
+              return h('div', {
+                className: 'scp-ring-fill',
+                style: { '--scp-deg': `${(percent / 100) * 360}deg` },
+              })
             })(),
+            h('div', { className: 'scp-ring-hole' }),
             h(
               'div',
               { className: 'scp-ring-inner' },
@@ -1473,7 +1499,32 @@ body[data-ds-dark-theme] .scp-panel{--scp-ok:#3ddc97;--scp-warn:#ffb547;--scp-da
       )
     }
 
-    /** 消息末尾（回合尾部）的本轮 Credits 估算，取自该回合的 tokenUsage。 */
+    /**
+     * 把「本轮 Credits」插到 DSH 操作行的「用量」与时间之间。
+     * 该位置没有槽位，只能按 DOM 结构注入；找不到时返回 placed:false 让调用方回退。
+     */
+    function placeTurnCredit(doc, turnId, text) {
+      if (doc === null || turnId === null) return { placed: false, reason: 'no-doc' }
+      const root = doc.querySelector(`[data-turn-tail="${String(turnId)}"]`)
+      if (root === null) return { placed: false, reason: 'no-turn' }
+      const endInfo = root.querySelector('[class*="endInfo"]')
+      if (endInfo === null) return { placed: false, reason: 'no-end-info' }
+      let node = endInfo.querySelector(`span[data-scp-turn-credit="${String(turnId)}"]`)
+      if (node === null) {
+        node = doc.createElement('span')
+        node.className = 'scp-turn-credit'
+        node.dataset.scpTurnCredit = String(turnId)
+      }
+      node.textContent = text
+      const clock = endInfo.querySelector('[class*="timeEnd"]')
+      if (node.nextSibling !== clock) endInfo.insertBefore(node, clock ?? null)
+      return { placed: true, node }
+    }
+
+    /**
+     * 消息操作行里的「本轮 Credits」：渲染后把节点插到「用量 X tok」与时间之间，
+     * 这个位置 DSH 没有槽位可用，所以用 DOM 注入 + 卸载时移除。
+     */
     function TurnCredits(props) {
       const state = useSnapshot()
       const snapshot = state.snapshot
@@ -1483,11 +1534,16 @@ body[data-ds-dark-theme] .scp-panel{--scp-ok:#3ddc97;--scp-warn:#ffb547;--scp-da
       const selection = modelSelection?.next ?? modelSelection?.lastUsed ?? null
       const modelId = selection?.model ?? null
       const isScnetModel = isScnetSelection(selection, snapshot?.models)
+      const rawTurn = props?.turn
+      const turnId =
+        typeof rawTurn === 'number'
+          ? rawTurn
+          : rawTurn?.turn ?? rawTurn?.id ?? rawTurn?.turnId ?? null
       const nodes = readChat((value) => value?.nodes)
       let usage = null
-      if (isScnetModel && nodes !== null && typeof nodes?.values === 'function' && props?.turn !== undefined) {
+      if (isScnetModel && nodes !== null && typeof nodes?.values === 'function' && turnId !== null) {
         for (const node of nodes.values()) {
-          if (node?.kind === 'turn-tail' && String(node?.data?.turn) === String(props.turn)) {
+          if (node?.kind === 'turn-tail' && String(node?.data?.turn) === String(turnId)) {
             usage = node?.data?.tokenUsage ?? null
             break
           }
@@ -1501,13 +1557,51 @@ body[data-ds-dark-theme] .scp-panel{--scp-ok:#3ddc97;--scp-warn:#ffb547;--scp-da
           : ((usage.uncachedInputTokens ?? 0) + (usage.cacheWriteTokens ?? 0)) / 1000 * rate.input +
             (usage.cacheReadTokens ?? 0) / 1000 * rate.cached +
             (usage.outputTokens ?? 0) / 1000 * rate.output
-      if (credits === null || !Number.isFinite(credits)) return null
-      const text = credits < 1000 ? String(Math.round(credits)) : credits < 10000 ? `${(credits / 1000).toFixed(1)}k` : `${(credits / 10000).toFixed(2)}万`
-      return h(
-        'span',
-        { className: 'scp-turn-credit', title: t('chipCreditsHint') },
-        `${t('turnUsage')} ≈${text} ${t('creditUnit')}`,
-      )
+      const text =
+        credits === null || !Number.isFinite(credits)
+          ? null
+          : `本轮 ≈${credits < 1000 ? Math.round(credits) : credits < 10000 ? `${(credits / 1000).toFixed(1)}k` : `${(credits / 10000).toFixed(2)}万`} Cr`
+      const nodeRef = useRef(null)
+      const placedRef = useRef(false)
+      const [fallback, setFallback] = useState(false)
+
+      useEffect(() => {
+        if (text === null || turnId === null) {
+          nodeRef.current?.remove()
+          nodeRef.current = null
+          return
+        }
+        const result = placeTurnCredit(typeof document === 'undefined' ? null : document, turnId, text)
+        if (!result.placed) {
+          setFallback(true)
+          return
+        }
+        setFallback(false)
+        nodeRef.current = result.node
+        if (!placedRef.current) {
+          placedRef.current = true
+          reportClientStatus({ phase: 'turn-placed', turn: turnId, text, reason: result.reason ?? null })
+        }
+      })
+
+      useEffect(() => () => {
+        nodeRef.current?.remove()
+        nodeRef.current = null
+      }, [])
+
+      reportClientStatus({
+        phase: 'turn',
+        turn: turnId,
+        turnRawType: typeof rawTurn,
+        isScnet: isScnetModel,
+        provider: selection?.provider ?? null,
+        model: modelId,
+        hasUsage: usage !== null,
+        credits,
+        text,
+      })
+
+      return fallback && text !== null ? h('span', { className: 'scp-turn-credit' }, text) : null
     }
 
     /** 输入框下方的紧凑徽标：剩余百分比 + 本话题/本轮 Credits 估算。 */
@@ -1572,6 +1666,20 @@ body[data-ds-dark-theme] .scp-panel{--scp-ok:#3ddc97;--scp-warn:#ffb547;--scp-da
       }
       const creditsVisible = snapshot !== null && snapshot.needsCookie !== true && isScnetModel
       const topicText = creditsVisible ? creditsText(topicCredits) : null
+      reportClientStatus({
+        phase: 'chip',
+        hasProjection: typeof props?.useProjection === 'function',
+        provider: selection?.provider ?? null,
+        model: modelId,
+        isScnet: isScnetModel,
+        topicCredits,
+        visible: topicText !== null,
+        snapshot: snapshot !== null,
+        needsCookie: snapshot?.needsCookie ?? null,
+        error: state.error === null ? null : String(state.error?.message ?? state.error),
+        hasInfo: state.info !== null && state.info !== undefined,
+        at: Date.now(),
+      })
 
       const parts = [`SCNet · ${snapshot === null || snapshot.needsCookie === true ? t('chipNoData') : left === null ? fmtNumber(snapshot.remainingCredits) : `${left >= 10 ? Math.round(left) : left.toFixed(1)}%`}`]
       if (topicText !== null) parts.push(`≈${topicText} ${t('creditUnit')}`)
@@ -1588,6 +1696,24 @@ body[data-ds-dark-theme] .scp-panel{--scp-ok:#3ddc97;--scp-warn:#ffb547;--scp-da
     const inject = ['slots', 'locale', 'layout']
 
     function apply(ctx) {
+      reportClientStatus({ phase: 'apply' })
+      // 诊断探针：直接看页面内请求快照接口的结果（状态码/错误/字段）。
+      fetch('/scnet-plan/snapshot', { headers: { accept: 'application/json' } })
+        .then(async (response) => {
+          const text = await response.text()
+          reportClientStatus({
+            phase: 'probe',
+            status: response.status,
+            ok: response.ok,
+            length: text.length,
+            head: text.slice(0, 120),
+          })
+        })
+        .catch((error) => reportClientStatus({ phase: 'probe', error: String(error) }))
+      const heartbeat = setInterval(() => {
+        reportClientStatus({ phase: 'heartbeat', at: Date.now() })
+      }, 20000)
+      if (typeof heartbeat?.unref === 'function') heartbeat.unref()
       try {
         ctx.effect(() => installStyles(), 'scnet-plan: styles')
         ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'scnet-plan: dictionaries')

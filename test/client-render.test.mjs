@@ -109,7 +109,7 @@ function loadClient() {
   vm.createContext(sandbox)
   const instrumented = source.replace(
     'return { inject, apply }',
-    'return { inject, apply, __debug: { UsageDetails, PlanPanel, SettingsSection, Catalog, CookieCallout, LoginForm, UsageChip, TurnCredits, PanelIcon, ringGeometry, isScnetSelection, store } }',
+    'return { inject, apply, __debug: { UsageDetails, PlanPanel, SettingsSection, Catalog, CookieCallout, LoginForm, UsageChip, TurnCredits, PanelIcon, annulusPath, circlePath, isScnetSelection, store } }',
   )
   vm.runInContext(instrumented, sandbox, { filename: 'client.js' })
   const exports = loaded.factory((name) => (name === 'react' ? react.api : {}))
@@ -208,30 +208,23 @@ test('login form and the remaining components render', () => {
   assert.deepEqual(load.errors, [])
 })
 
-test('ringGeometry keeps the ring a clean circle at every percentage', () => {
-  const { ringGeometry } = load.debug
-  const circumference = 2 * Math.PI * 46
-  const stroke = 12
-  const full = ringGeometry(100, circumference, stroke)
-  assert.equal(full.cap, 'butt')
-  assert.equal(full.dash, circumference)
+test('annulus geometry keeps both ring edges on true circles', () => {
+  const { annulusPath, circlePath } = load.debug
+  const full = annulusPath(52, 52, 52, 40, 0, 360)
+  assert.ok(full.includes(circlePath(52, 52, 52)), 'outer edge is a full circle')
+  assert.ok(full.includes(circlePath(52, 52, 40)), 'inner edge is a full circle')
 
-  const high = ringGeometry(96, circumference, stroke)
-  assert.equal(high.cap, 'round')
-  assert.ok(high.dash < (circumference * 96) / 100, 'compensates the round caps')
-  assert.ok(high.dash > 0)
+  const quarter = annulusPath(52, 52, 52, 40, 0, 90)
+  assert.ok(quarter.startsWith('M 52 0'), 'sector starts at the top of the outer circle')
+  const [, x, y] = quarter.match(/A 52 52 0 0 1 ([\d.]+) ([\d.]+)/) ?? []
+  assert.ok(Math.abs(Number(x) - 104) < 0.01 && Math.abs(Number(y) - 52) < 0.01, '90° lands on the outer circle')
 
-  const low = ringGeometry(1, circumference, stroke)
-  assert.equal(low.cap, 'butt')
-  assert.ok(Math.abs(low.dash - (circumference * 1) / 100) < 0.01)
-
-  const zero = ringGeometry(0, circumference, stroke)
-  assert.equal(zero.dash, 0)
-  assert.equal(zero.cap, 'butt')
-  const empty = ringGeometry(null, circumference, stroke)
-  assert.equal(empty.dash, 0)
-  assert.equal(empty.cap, 'butt')
+  assert.equal(annulusPath(52, 52, 52, 40, 0, 0), '')
+  const nearly = annulusPath(52, 52, 52, 40, 0, 270)
+  assert.ok(nearly.includes('A 52 52 0 1 1'), 'large sweep uses the long arc flag')
+  assert.ok(nearly.includes('A 40 40 0 1 0'), 'inner edge is drawn back along the inner circle')
 })
+
 
 test('UsageDetails renders the ring socket with the new geometry', () => {
   const nodes = render(load.debug.UsageDetails, {
@@ -241,7 +234,8 @@ test('UsageDetails renders the ring socket with the new geometry', () => {
   })
   const html = JSON.stringify(nodes)
   assert.ok(html.includes('scp-ring'), 'renders the ring container')
-  assert.ok(html.includes('scp-ring-svg'), 'renders the SVG ring')
+  assert.ok(html.includes('scp-ring-fill'), 'renders the CSS conic fill')
+  assert.ok(html.includes('scp-ring-hole'), 'renders the circular hole')
   assert.deepEqual(load.errors, [])
 })
 
