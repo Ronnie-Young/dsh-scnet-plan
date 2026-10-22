@@ -287,6 +287,42 @@ export function apply(ctx, config) {
         `webServer.register(${config.routePath}/client-report)`,
       )
 
+      // 构建号：客户端文件的大小+mtime，用作“页面是否加载到最新代码”的判据。
+      const clientEntry = new URL('./client.js', import.meta.url)
+      const readBuild = () => {
+        try {
+          const { statSync } = process.getBuiltinModule('node:fs')
+          const st = statSync(clientEntry)
+          return `${Math.round(st.mtimeMs)}-${st.size}`
+        } catch {
+          return 'unknown'
+        }
+      }
+
+      registerJsonRoute(
+        `${config.routePath}/build`,
+        async () => ({ ok: true, build: readBuild() }),
+        `webServer.register(${config.routePath}/build)`,
+      )
+
+      // 自愈：旧页面（缓存里的 HTML）加载后发现 Host 构建号变了，就跳到带版本参数的 URL，
+      // 让浏览器重新取 HTML 与最新的插件 bundle。没有这个，Electron 页面缓存会让更新永远不生效。
+      if (typeof webCtx.webServer.tapIndex === 'function') {
+        webCtx.effect(() =>
+          webCtx.webServer.tapIndex((html) => {
+            const build = readBuild()
+            const script =
+              '<script>(function(){var b=' + JSON.stringify(build) + ';' +
+              'var u=new URL(location.href);if(u.searchParams.get("scp")===b)return;' +
+              'fetch(' + JSON.stringify(`${config.routePath}/build`) + ',{cache:"no-store"})' +
+              '.then(function(r){return r.json()}).then(function(d){' +
+              'if(!d||!d.build||d.build===b)return;u.searchParams.set("scp",d.build);location.replace(u.toString());' +
+              '}).catch(function(){});})();<' + '/script>'
+            return html.includes('</head>') ? html.replace('</head>', `${script}</head>`) : `${html}${script}`
+          }),
+        )
+      }
+
       registerJsonRoute(
         `${config.routePath}/client-status`,
         async () => ({ ok: true, at: clientReportAt, reports: clientReports }),

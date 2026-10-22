@@ -4,7 +4,7 @@ import { apply, Config, name } from '../index.js'
 
 /** Build a minimal Cordis-like ctx capturing every registration `apply` makes. */
 function fakeCtx({ credentialsStore = {} } = {}) {
-  const registrations = { routes: [], tools: [], settingsConfigured: false, effects: 0 }
+  const registrations = { routes: [], tools: [], taps: [], settingsConfigured: false, effects: 0 }
   const services = {
     credentials: {
       async resolve(ref) {
@@ -21,6 +21,10 @@ function fakeCtx({ credentialsStore = {} } = {}) {
       },
     },
     webServer: {
+      tapIndex(transform) {
+        registrations.taps.push(transform)
+        return () => {}
+      },
       register(route) {
         registrations.routes.push(route)
         return () => {
@@ -140,6 +144,7 @@ test('apply registers the snapshot route, the tool and the settings policy', () 
   const paths = registrations.routes.map((route) => route.path)
   assert.deepEqual(paths.sort(), [
     '/scnet-plan/snapshot',
+    '/scnet-plan/snapshot/build',
     '/scnet-plan/snapshot/client-report',
     '/scnet-plan/snapshot/client-status',
     '/scnet-plan/snapshot/login',
@@ -262,4 +267,14 @@ test('POST /login rejects empty credentials without contacting SCNet', async () 
   assert.equal(answer.body.ok, true)
   assert.equal(answer.body.login.state, 'failed')
   assert.match(answer.body.login.message, /手机号和短信验证码/)
+})
+
+test('index injection adds the cache-busting self-heal bootstrap', () => {
+  const { ctx, registrations } = fakeCtx()
+  apply(ctx, Config({}))
+  assert.equal(registrations.taps.length, 1)
+  const html = registrations.taps[0]('<html><head><title>x</title></head><body></body></html>')
+  assert.ok(html.includes('</head>'), 'keeps a valid document')
+  assert.ok(html.includes('/scnet-plan/snapshot/build'), 'asks the Host for its current build')
+  assert.ok(html.includes('location.replace'), 'reloads through a versioned URL when stale')
 })
