@@ -109,7 +109,7 @@ function loadClient() {
   vm.createContext(sandbox)
   const instrumented = source.replace(
     'return { inject, apply }',
-    'return { inject, apply, __debug: { UsageDetails, PlanPanel, SettingsSection, Catalog, CookieCallout, LoginForm, UsageChip, TurnCredits, PanelIcon, ringGeometry, store } }',
+    'return { inject, apply, __debug: { UsageDetails, PlanPanel, SettingsSection, Catalog, CookieCallout, LoginForm, UsageChip, TurnCredits, PanelIcon, ringGeometry, isScnetSelection, store } }',
   )
   vm.runInContext(instrumented, sandbox, { filename: 'client.js' })
   const exports = loaded.factory((name) => (name === 'react' ? react.api : {}))
@@ -243,4 +243,13 @@ test('UsageDetails renders the ring socket with the new geometry', () => {
   assert.ok(html.includes('scp-ring'), 'renders the ring container')
   assert.ok(html.includes('scp-ring-svg'), 'renders the SVG ring')
   assert.deepEqual(load.errors, [])
+})
+
+test('isScnetSelection only accepts SCNet providers or catalog models', () => {
+  const { isScnetSelection } = load.debug
+  assert.equal(isScnetSelection({ provider: 'scnet', model: 'whatever' }, []), true)
+  assert.equal(isScnetSelection({ provider: 'deepseek-account', model: 'deepseek-flash' }, [{ id: 'DeepSeek-V4.1-Flash-1017' }]), false)
+  assert.equal(isScnetSelection({ provider: 'other', model: 'DeepSeek-V4.1-Flash-1017' }, [{ id: 'DeepSeek-V4.1-Flash-1017' }]), true)
+  assert.equal(isScnetSelection(null, [{ id: 'x' }]), false)
+  assert.equal(isScnetSelection({ provider: null, model: 'Scnet-Model' }, ['Scnet-Model']), true)
 })

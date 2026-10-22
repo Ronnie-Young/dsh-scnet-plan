@@ -15,6 +15,9 @@ window.__ModuleLoader__.load({
   factory: (require) => {
     const React = require('react')
     const { useEffect, useRef, useState } = React
+const VERSION = '0.0.3'
+const BUILD_RAW = '__SCNET_BUILD__'
+const BUILD_LABEL = BUILD_RAW.startsWith('__') ? 'dev' : BUILD_RAW
     const h = React.createElement
 
     const NS = 'scnet-plan'
@@ -1007,6 +1010,20 @@ body[data-ds-dark-theme] .scp-panel{--scp-ok:#3ddc97;--scp-warn:#ffb547;--scp-da
      * 圆环几何：圆帽端点会额外伸出半个线宽，按百分比直接画会在接近 100% 时两端重叠，
      * 顶部出现缺口/台阶。这里补偿可见弧长，极小比例改用平头，保证读数真实。
      */
+    /** 判断当前模型选择是否属于 SCNet：provider 名，或模型在 SCNet 模型目录内。 */
+    function isScnetSelection(selection, models) {
+      if (selection === null || typeof selection !== 'object') return false
+      const provider = selection.provider ?? null
+      if (provider !== null && String(provider).toLowerCase().includes('scnet')) return true
+      const modelId = selection.model ?? null
+      if (modelId === null) return false
+      const list = Array.isArray(models) ? models : []
+      return list.some((entry) => {
+        const id = typeof entry === 'string' ? entry : entry?.id ?? entry?.name ?? null
+        return id !== null && (id === modelId || String(id).toLowerCase() === String(modelId).toLowerCase())
+      })
+    }
+
     function ringGeometry(percent, circumference, stroke) {
       if (percent === null || !Number.isFinite(percent) || percent <= 0) return { dash: 0, cap: 'butt' }
       const visible = (circumference * Math.min(100, percent)) / 100
@@ -1287,6 +1304,7 @@ body[data-ds-dark-theme] .scp-panel{--scp-ok:#3ddc97;--scp-warn:#ffb547;--scp-da
         h('span', null, `${t('source')} · ${snapshot.source || '—'}`),
         h('span', null, `${t('updatedAt')} · ${fmtTime(snapshot.fetchedAt || state.at)}`),
         h('span', null, `${t('autoRefresh')} · ${info?.refreshIntervalSec > 0 ? t('everySeconds', { n: info.refreshIntervalSec }) : t('off')}`),
+        h('span', { className: 'scp-build' }, `v${VERSION} · ${BUILD_LABEL}`),
         state.error !== null ? h('span', { className: 'scp-warn' }, t('staleWarning')) : null,
       )
 
@@ -1459,16 +1477,12 @@ body[data-ds-dark-theme] .scp-panel{--scp-ok:#3ddc97;--scp-warn:#ffb547;--scp-da
     function TurnCredits(props) {
       const state = useSnapshot()
       const snapshot = state.snapshot
-      const readSession = typeof props?.useSession === 'function' ? props.useSession : () => undefined
+      const readProjection = typeof props?.useProjection === 'function' ? props.useProjection : () => undefined
       const readChat = typeof props?.useChat === 'function' ? props.useChat : () => undefined
-      const selection = readSession((value) => value?.modelSelection?.next ?? value?.modelSelection?.lastUsed ?? null)
-      const provider = selection?.provider ?? null
+      const modelSelection = readProjection('modelSelection')
+      const selection = modelSelection?.next ?? modelSelection?.lastUsed ?? null
       const modelId = selection?.model ?? null
-      const scnetModels = Array.isArray(snapshot?.models) ? snapshot.models : []
-      const isScnetModel =
-        provider !== null && String(provider).toLowerCase().includes('scnet')
-          ? true
-          : modelId !== null && scnetModels.some((entry) => (entry?.id ?? entry?.name) === modelId)
+      const isScnetModel = isScnetSelection(selection, snapshot?.models)
       const nodes = readChat((value) => value?.nodes)
       let usage = null
       if (isScnetModel && nodes !== null && typeof nodes?.values === 'function' && props?.turn !== undefined) {
@@ -1520,15 +1534,12 @@ body[data-ds-dark-theme] .scp-panel{--scp-ok:#3ddc97;--scp-warn:#ffb547;--scp-da
       const readSession = typeof props?.useSession === 'function' ? props.useSession : () => undefined
       const usage = readProjection('tokenUsage')
       const running = Boolean(readSession((value) => value?.running))
-      const selection = readSession((value) => value?.modelSelection?.next ?? value?.modelSelection?.lastUsed ?? null)
-      const provider = selection?.provider ?? null
+      // modelSelection is a session PROJECTION, not part of the session snapshot.
+      const modelSelection = readProjection('modelSelection')
+      const selection = modelSelection?.next ?? modelSelection?.lastUsed ?? null
       const modelId = selection?.model ?? null
-      const scnetModels = Array.isArray(snapshot?.models) ? snapshot.models : []
       // Credits only apply to requests billed by the SCNet Token Plan.
-      const isScnetModel =
-        provider !== null && String(provider).toLowerCase().includes('scnet')
-          ? true
-          : modelId !== null && scnetModels.some((entry) => (entry?.id ?? entry?.name) === modelId)
+      const isScnetModel = isScnetSelection(selection, snapshot?.models)
       const fallbackRates = state.info?.creditRates ?? { input: 2, cached: 0.2, output: 8 }
       const rate = (isScnetModel && modelId !== null && snapshot?.modelRates?.[modelId]) || fallbackRates
       const creditsOf = (value, prices) => {

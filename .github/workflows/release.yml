@@ -33,6 +33,9 @@ jobs:
             exit 1
           fi
 
+      - name: Stamp the build commit
+        run: sed -i "s/__SCNET_BUILD__/${GITHUB_SHA::7}/g" client.js
+
       - name: Build the tarball
         run: npm pack
 
