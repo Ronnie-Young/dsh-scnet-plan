@@ -234,8 +234,8 @@ test('UsageDetails renders the ring socket with the new geometry', () => {
   })
   const html = JSON.stringify(nodes)
   assert.ok(html.includes('scp-ring'), 'renders the ring container')
-  assert.ok(html.includes('scp-ring-fill'), 'renders the CSS conic fill')
-  assert.ok(html.includes('scp-ring-hole'), 'renders the circular hole')
+  assert.ok(html.includes('scp-ring-svg'), 'renders the SVG ring')
+  assert.ok(html.includes('A 52 52'), 'outer edge is a circle arc')
   assert.deepEqual(load.errors, [])
 })
 

@@ -584,13 +584,11 @@ body[data-ds-dark-theme] .scp-panel{--scp-ok:#3ddc97;--scp-warn:#ffb547;--scp-da
 .scp-hero{display:flex;align-items:center;justify-content:flex-start;gap:26px;margin-top:18px;flex-wrap:wrap}
 .scp-label{font-size:11px;color:var(--dsw-alias-label-secondary);letter-spacing:.01em}
 .scp-ring{--scp-ring-track:#e4e6e9;position:relative;width:104px;height:104px;flex:none;display:flex;align-items:center;justify-content:center}
-.scp-ring-fill{position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--scp-ring-color,var(--scp-ok)) 0 var(--scp-deg,0deg),var(--scp-ring-track) var(--scp-deg,0deg) 360deg)}
-.scp-ring-hole{position:absolute;inset:12px;border-radius:50%;background:var(--dsw-alias-bg-layer-1,#fff)}
 .scp-ring-svg{position:absolute;inset:0;display:block;width:104px;height:104px;overflow:visible}
-.scp-ring-ok{--scp-ring-color:var(--scp-ok)}
-.scp-ring-warn{--scp-ring-color:var(--scp-warn)}
-.scp-ring-error{--scp-ring-color:var(--scp-danger)}
-.scp-ring-inner{position:relative;z-index:1;width:78px;height:78px;border-radius:50%;background:var(--dsw-alias-bg-layer-1);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.scp-ring-ok{--scp-ring-color:var(--scp-ok);color:var(--scp-ring-color)}
+.scp-ring-warn{--scp-ring-color:var(--scp-warn);color:var(--scp-ring-color)}
+.scp-ring-error{--scp-ring-color:var(--scp-danger);color:var(--scp-ring-color)}
+.scp-ring-inner{position:relative;z-index:1;width:78px;height:78px;border-radius:50%;corner-shape:round;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
 .scp-ring-inner b{font-size:23px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
 .scp-ring-inner span{font-size:10px;color:var(--dsw-alias-label-secondary)}
 .scp-hero-value{display:flex;align-items:baseline;gap:6px;margin-top:4px;font-variant-numeric:tabular-nums}
@@ -1133,13 +1131,26 @@ body[data-ds-dark-theme] .scp-panel{--scp-ok:#3ddc97;--scp-warn:#ffb547;--scp-da
             },
             (() => {
               const percent = leftPercent === null || !Number.isFinite(leftPercent) ? 0 : Math.min(100, Math.max(0, leftPercent))
-              reportClientStatus({ phase: 'ring', percent, mode: 'css-conic' })
-              return h('div', {
-                className: 'scp-ring-fill',
-                style: { '--scp-deg': `${(percent / 100) * 360}deg` },
-              })
+              const sweep = (percent / 100) * 360
+              reportClientStatus({ phase: 'ring', percent, mode: 'svg-annulus' })
+              return h(
+                'svg',
+                { className: 'scp-ring-svg', viewBox: '0 0 104 104', width: 104, height: 104, 'aria-hidden': 'true' },
+                h('path', {
+                  d: `${circlePath(52, 52, 52)} ${circlePath(52, 52, 40)}`,
+                  fillRule: 'evenodd',
+                  fill: 'var(--scp-ring-track)',
+                }),
+                sweep > 0
+                  ? h('path', {
+                      d: annulusPath(52, 52, 52, 40, 0, sweep),
+                      fillRule: 'evenodd',
+                      fill: 'currentColor',
+                    })
+                  : null,
+              )
             })(),
-            h('div', { className: 'scp-ring-hole' }),
+
             h(
               'div',
               { className: 'scp-ring-inner' },
