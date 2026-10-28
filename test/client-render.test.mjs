@@ -140,6 +140,18 @@ function loadClient() {
 }
 
 /** Render a component once and flatten its host tree. */
+/** Collect component names from a rendered element tree (children are not executed). */
+function componentNames(node, acc = new Set()) {
+  if (Array.isArray(node)) {
+    for (const item of node) componentNames(item, acc)
+    return acc
+  }
+  if (node === null || typeof node !== 'object') return acc
+  if (typeof node.type === 'function' && node.type.name) acc.add(node.type.name)
+  if (Array.isArray(node.children)) componentNames(node.children, acc)
+  return acc
+}
+
 function render(component, props) {
   const tree = component(props)
   const nodes = []
@@ -255,4 +267,37 @@ test('auth errors are recognised so the panel can offer a login form', () => {
   assert.equal(isAuthError({ code: 'AUTH' }), true)
   assert.equal(isAuthError({ code: 'NETWORK' }), false)
   assert.equal(isAuthError(null), false)
+})
+
+test('panel offers an inline login form when the console session expired', () => {
+  const { store, PlanPanel } = load.debug
+  const before = store.get()
+  try {
+    store.set({
+      status: 'error',
+      snapshot: null,
+      error: { code: 'SESSION_REQUIRED', message: 'SCNet 控制台登录态已失效（HTTP 401）' },
+      info: { loginEnabled: true, warnBelowPercent: 20 },
+      at: Date.now(),
+    })
+    const out = render(PlanPanel, {})
+    const html = JSON.stringify(out)
+    const hasLoginForm = out.nodes.some((node) => typeof node.type === 'function' && node.type.name === 'LoginForm')
+    assert.ok(html.includes('scp-card-error'), 'shows the failure reason')
+    assert.ok(hasLoginForm, 'renders the login form inline')
+    assert.ok(html.includes('SESSION_REQUIRED'), 'keeps the diagnostic code')
+
+    store.set({
+      status: 'ok',
+      snapshot: { needsCookie: true, catalog: [], planCode: null, models: [] },
+      error: null,
+      info: { loginEnabled: true, warnBelowPercent: 20 },
+      at: Date.now(),
+    })
+    const needsCookieOut = render(PlanPanel, {})
+    const needsCookieLogin = needsCookieOut.nodes.some((node) => typeof node.type === 'function' && node.type.name === 'LoginForm')
+    assert.ok(needsCookieLogin, 'login is offered when no console session exists either')
+  } finally {
+    store.set(before)
+  }
 })

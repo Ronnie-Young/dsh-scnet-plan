@@ -279,8 +279,14 @@ export function apply(ctx, config) {
           } catch (error) {
             return { ok: false, error: { code: 'BAD_REQUEST', message: 'invalid body' } }
           }
+          // 只保留构建信息，绝不落库用量/模型等业务数据。
           const phase = typeof body.phase === 'string' ? body.phase : 'unknown'
-          clientReports = { ...clientReports, [phase]: body }
+          const entry = {
+            phase,
+            build: typeof body.build === 'string' ? body.build : null,
+            version: typeof body.version === 'string' ? body.version : null,
+          }
+          clientReports = { ...clientReports, [phase]: entry }
           clientReportAt = new Date().toISOString()
           return { ok: true }
         },

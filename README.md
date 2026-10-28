@@ -21,8 +21,8 @@ SCNet（超算互联网）的 Token Plan 按月发 Credits，但余额只有登�
 | 方式 | target | 说明 |
 | --- | --- | --- |
 | **插件市场**（发现页） | 先在「发现 → 管理索引源」添加 `https://ronnie-young.github.io/dsh-plugins-market/index.json`，再在市场里点安装 | 最接近“应用商店”的体验 |
-| **GitHub 源**（免 clone） | `github:Ronnie-Young/dsh-scnet-plan#v0.0.3` | pnpm 直接拉取，不用本地目录 |
-| **Release 压缩包** | `https://github.com/Ronnie-Young/dsh-scnet-plan/releases/download/v0.0.3/dsh-scnet-plan-0.0.3.tgz` | 从 GitHub Release 直链安装 |
+| **GitHub 源**（免 clone） | `github:Ronnie-Young/dsh-scnet-plan#v0.0.4` | pnpm 直接拉取，不用本地目录 |
+| **Release 压缩包** | `https://github.com/Ronnie-Young/dsh-scnet-plan/releases/download/v0.0.4/dsh-scnet-plan-0.0.4.tgz` | 从 GitHub Release 直链安装 |
 | 本地目录（开发/排错） | `/你的路径/dsh-scnet-plan` | 需要先 `git clone` |
 | npm（首次发布后启用） | `dsh-scnet-plan` | 发布后一行安装 |
 

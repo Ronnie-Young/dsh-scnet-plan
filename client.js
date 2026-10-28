@@ -15,7 +15,7 @@ window.__ModuleLoader__.load({
   factory: (require) => {
     const React = require('react')
     const { useEffect, useRef, useState } = React
-const VERSION = '0.0.3'
+const VERSION = '0.0.4'
 const BUILD_RAW = '__SCNET_BUILD__'
 const BUILD_LABEL = BUILD_RAW.startsWith('__') ? 'dev' : BUILD_RAW
 let lastReportKey = ''
