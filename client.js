@@ -508,6 +508,12 @@ function reportClientStatus(payload) {
       return { key: 'statusUnknown', tone: 'idle' }
     }
 
+    /** 登录态相关错误：面板里要直接给登录入口，而不是只让用户重试。 */
+    function isAuthError(error) {
+      const code = String(error?.code ?? '')
+      return code === 'SESSION_REQUIRED' || code === 'UNAUTHORIZED' || code === 'AUTH'
+    }
+
     function hintFor(error) {
       const code = String(error?.code ?? '')
       if (code === 'MISSING_KEY' || code === 'NO_KEY') return t('hintMissingKey')
@@ -1312,6 +1318,15 @@ body[data-ds-dark-theme] .scp-panel{--scp-ok:#3ddc97;--scp-warn:#ffb547;--scp-da
                 h('span', { className: 'scp-code' }, String(error.code ?? '')),
               ),
             ),
+            isAuthError(error) && info?.loginEnabled !== false
+              ? h(
+                  'article',
+                  { className: 'scp-card' },
+                  h('h2', { className: 'scp-section-title' }, t('loginTitle')),
+                  h('p', { className: 'scp-note', style: { margin: '0 0 12px' } }, t('loginDesc')),
+                  h(LoginForm, null),
+                )
+              : null,
           ),
         )
       }
@@ -1354,6 +1369,15 @@ body[data-ds-dark-theme] .scp-panel{--scp-ok:#3ddc97;--scp-warn:#ffb547;--scp-da
             { className: 'scp-wrap' },
             header,
             h(CookieCallout),
+            info?.loginEnabled !== false
+              ? h(
+                  'article',
+                  { className: 'scp-card' },
+                  h('h2', { className: 'scp-section-title' }, t('loginTitle')),
+                  h('p', { className: 'scp-note', style: { margin: '0 0 12px' } }, t('loginDesc')),
+                  h(LoginForm, null),
+                )
+              : null,
             h('article', { className: 'scp-card' }, h(Catalog, { catalog: snapshot.catalog, currentCode: snapshot.planCode })),
             footer,
             state.error !== null ? h('p', { className: 'scp-note' }, hintFor(state.error)) : null,

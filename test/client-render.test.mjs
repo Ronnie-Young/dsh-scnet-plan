@@ -109,7 +109,7 @@ function loadClient() {
   vm.createContext(sandbox)
   const instrumented = source.replace(
     'return { inject, apply }',
-    'return { inject, apply, __debug: { UsageDetails, PlanPanel, SettingsSection, Catalog, CookieCallout, LoginForm, UsageChip, TurnCredits, PanelIcon, annulusPath, circlePath, isScnetSelection, store } }',
+    'return { inject, apply, __debug: { UsageDetails, PlanPanel, SettingsSection, Catalog, CookieCallout, LoginForm, UsageChip, TurnCredits, PanelIcon, annulusPath, circlePath, isScnetSelection, isAuthError, store } }',
   )
   vm.runInContext(instrumented, sandbox, { filename: 'client.js' })
   const exports = loaded.factory((name) => (name === 'react' ? react.api : {}))
@@ -246,4 +246,13 @@ test('isScnetSelection only accepts SCNet providers or catalog models', () => {
   assert.equal(isScnetSelection({ provider: 'other', model: 'DeepSeek-V4.1-Flash-1017' }, [{ id: 'DeepSeek-V4.1-Flash-1017' }]), true)
   assert.equal(isScnetSelection(null, [{ id: 'x' }]), false)
   assert.equal(isScnetSelection({ provider: null, model: 'Scnet-Model' }, ['Scnet-Model']), true)
+})
+
+test('auth errors are recognised so the panel can offer a login form', () => {
+  const { isAuthError } = load.debug
+  assert.equal(isAuthError({ code: 'SESSION_REQUIRED' }), true)
+  assert.equal(isAuthError({ code: 'UNAUTHORIZED' }), true)
+  assert.equal(isAuthError({ code: 'AUTH' }), true)
+  assert.equal(isAuthError({ code: 'NETWORK' }), false)
+  assert.equal(isAuthError(null), false)
 })
