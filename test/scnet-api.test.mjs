@@ -29,6 +29,14 @@ const CATALOG = {
 
 const MODELS = { object: 'list', data: [{ id: 'DeepSeek-V4.1-Flash' }, { id: 'Kimi-K3' }] }
 
+/** 以当前时间为基准的 console 时间串（YYYY-MM-DD HH:MM:SS）。 */
+function monthsFromNow(months) {
+  const date = new Date()
+  date.setMonth(date.getMonth() + months)
+  const pad = (value) => String(value).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} 23:59:59`
+}
+
 const SUBSCRIPTION = {
   code: '0',
   msg: 'success',
@@ -39,8 +47,9 @@ const SUBSCRIPTION = {
       planCredits: 60000,
       usedCredits: 15000,
       percent: 25,
-      minValidTime: '2026-10-01 00:00:00',
-      maxExpireTime: '2026-11-01 23:59:59',
+      // 相对日期：避免固件随真实时间推移而“过期”，导致断言无故变红。
+      minValidTime: monthsFromNow(-1),
+      maxExpireTime: monthsFromNow(1),
     },
   ],
 }

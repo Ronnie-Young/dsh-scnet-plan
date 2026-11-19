@@ -109,7 +109,7 @@ function loadClient() {
   vm.createContext(sandbox)
   const instrumented = source.replace(
     'return { inject, apply }',
-    'return { inject, apply, __debug: { UsageDetails, PlanPanel, SettingsSection, Catalog, CookieCallout, LoginForm, UsageChip, TurnCredits, PanelIcon, annulusPath, circlePath, isScnetSelection, isAuthError, store } }',
+    'return { inject, apply, __debug: { UsageDetails, PlanPanel, SettingsSection, Catalog, CookieCallout, LoginForm, UsageChip, TurnCredits, PanelIcon, annulusPath, circlePath, isScnetSelection, isAuthError, fmtNumber, store } }',
   )
   vm.runInContext(instrumented, sandbox, { filename: 'client.js' })
   const exports = loaded.factory((name) => (name === 'react' ? react.api : {}))
@@ -187,8 +187,9 @@ test('rich plan panel and usage card render without a missing helper', () => {
   load.state.set({ status: 'ready', snapshot: SNAPSHOT, error: null, info: { warnBelowPercent: 20, refreshIntervalSec: 300 }, at: Date.now() })
   const usage = render(load.debug.UsageDetails, { snapshot: SNAPSHOT, state: { info: { warnBelowPercent: 20 } } })
   assert.ok(usage.nodes.length > 40)
-  // 13,556.87 credits are shown in the Chinese compact form "1.36 万".
-  assert.ok(usage.texts.some((text) => text.includes('万')), 'expected a formatted credit number')
+  // 13,556.87 credits use the shared English compact form "13.6k".
+  assert.ok(usage.texts.some((text) => text.includes('13.6k')), 'expected a formatted credit number')
+  assert.equal(usage.texts.some((text) => text.includes('万') || text.includes('亿')), false, 'no Chinese 万/亿 units')
   assert.ok(usage.texts.includes('remaining'), 'expected the remaining label')
 
   // The whole panel must render too: this is what used to throw and blank the page.
@@ -299,5 +300,24 @@ test('panel offers an inline login form when the console session expired', () =>
     assert.ok(needsCookieLogin, 'login is offered when no console session exists either')
   } finally {
     store.set(before)
+  }
+})
+
+test('fmtNumber always uses English k/M/B units', () => {
+  const { fmtNumber } = load.debug
+  assert.equal(fmtNumber(0), '0')
+  assert.equal(fmtNumber(999), '999')
+  assert.equal(fmtNumber(1000), '1k')
+  assert.equal(fmtNumber(1234), '1.23k')
+  assert.equal(fmtNumber(14700), '14.7k')
+  assert.equal(fmtNumber(60000), '60k')
+  assert.equal(fmtNumber(999999), '1M', 'carries over instead of 1000k')
+  assert.equal(fmtNumber(1250000), '1.25M')
+  assert.equal(fmtNumber(12345678), '12.3M')
+  assert.equal(fmtNumber(2000000000), '2B')
+  assert.equal(fmtNumber(null), '—')
+  for (const value of [14700, 53900, 1234567]) {
+    const text = fmtNumber(value)
+    assert.equal(/万|亿/.test(text), false, 'never falls back to Chinese units')
   }
 })

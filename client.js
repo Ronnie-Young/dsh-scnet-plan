@@ -15,7 +15,7 @@ window.__ModuleLoader__.load({
   factory: (require) => {
     const React = require('react')
     const { useEffect, useRef, useState } = React
-const VERSION = '0.0.4'
+const VERSION = '0.0.5'
 const BUILD_RAW = '__SCNET_BUILD__'
 const BUILD_LABEL = BUILD_RAW.startsWith('__') ? 'dev' : BUILD_RAW
 let lastReportKey = ''
@@ -460,22 +460,39 @@ function reportClientStatus(payload) {
       return text
     }
 
-    /** 数字本地化：中文用 万/亿，英文用 K/M。 */
+    /**
+     * 紧凑数字：统一用英文单位 k / M / B（与 DSH 自身的用量显示一致）。
+     * 小额保留整数；10 以下两位小数、100 以下一位小数、更大取整，去掉多余的 0。
+     */
     function fmtNumber(value) {
       if (value === null || value === undefined || !Number.isFinite(value)) return '—'
-      const zhLocale = String(localeId).startsWith('zh')
-      const n = Math.abs(value)
       const sign = value < 0 ? '-' : ''
-      const trim = (x, digits) => x.toFixed(digits).replace(/\.0+$/, '').replace(/(\.\d*?)0+$/, '$1')
-      if (zhLocale) {
-        if (n >= 1e8) return `${sign}${trim(n / 1e8, 2)} 亿`
-        if (n >= 1e4) return `${sign}${trim(n / 1e4, 2)} 万`
-      } else {
-        if (n >= 1e9) return `${sign}${trim(n / 1e9, 2)}B`
-        if (n >= 1e6) return `${sign}${trim(n / 1e6, 2)}M`
-        if (n >= 1e3) return `${sign}${trim(n / 1e3, 2)}K`
+      const n = Math.abs(value)
+      if (n < 1e3) return `${sign}${Math.round(n).toLocaleString('en-US')}`
+      const units = [
+        [1e9, 'B'],
+        [1e6, 'M'],
+        [1e3, 'k'],
+      ]
+      let index = units.findIndex(([scale]) => n >= scale)
+      if (index < 0) index = units.length - 1
+      const trim = (x, digits) => {
+        const text = x.toFixed(digits)
+        return text.includes('.') ? text.replace(/0+$/, '').replace(/\.$/, '') : text
       }
-      return `${sign}${Math.round(n).toLocaleString(zhLocale ? 'zh-CN' : 'en-US')}`
+      while (index >= 0) {
+        const [scale, unit] = units[index]
+        const scaled = n / scale
+        const digits = scaled < 10 ? 2 : scaled < 100 ? 1 : 0
+        const text = trim(scaled, digits)
+        // 999,999 会先落到 k，四舍五入成 1000k：进位到上一个单位。
+        if (digits === 0 && Number(text) >= 1000 && index > 0) {
+          index -= 1
+          continue
+        }
+        return `${sign}${text}${unit}`
+      }
+      return `${sign}${Math.round(n)}`
     }
 
     function fmtDate(value) {
@@ -1595,7 +1612,7 @@ body[data-ds-dark-theme] .scp-panel{--scp-ok:#3ddc97;--scp-warn:#ffb547;--scp-da
       const text =
         credits === null || !Number.isFinite(credits)
           ? null
-          : `本轮 ≈${credits < 1000 ? Math.round(credits) : credits < 10000 ? `${(credits / 1000).toFixed(1)}k` : `${(credits / 10000).toFixed(2)}万`} Cr`
+          : `本轮 ≈${fmtNumber(credits)} Cr`
       const nodeRef = useRef(null)
       const placedRef = useRef(false)
       const [fallback, setFallback] = useState(false)
@@ -1693,12 +1710,7 @@ body[data-ds-dark-theme] .scp-panel{--scp-ok:#3ddc97;--scp-warn:#ffb547;--scp-da
           ? Math.max(0, topicCredits - turn.base)
           : null
         : turn.last
-      const creditsText = (value) => {
-        if (value === null || !Number.isFinite(value)) return null
-        if (value < 1000) return String(Math.round(value))
-        if (value < 10000) return `${(value / 1000).toFixed(1)}k`
-        return `${(value / 10000).toFixed(2)}万`
-      }
+      const creditsText = (value) => (value === null || !Number.isFinite(value) ? null : fmtNumber(value))
       const creditsVisible = snapshot !== null && snapshot.needsCookie !== true && isScnetModel
       const topicText = creditsVisible ? creditsText(topicCredits) : null
       reportClientStatus({
